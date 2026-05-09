@@ -11,16 +11,7 @@ export function MemoSection({ memos }: MemoSectionProps) {
   if (memos.length === 0) return null
 
   return (
-    <div style={{ marginTop: 24 }}>
-      {/* Header */}
-      <div
-        className="flex items-center gap-2"
-        style={{ marginBottom: 12 }}
-      >
-        <IconMemo width={16} height={16} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>메모</span>
-      </div>
-
+    <div>
       {/* Grid */}
       <div
         style={{

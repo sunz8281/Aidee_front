@@ -66,10 +66,10 @@ export default function ProjectPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+      <div className="flex flex-col min-h-screen bg-surface">
         <Header />
         <div className="flex items-center justify-center flex-1">
-          <span style={{ color: '#9E9E9E', fontSize: 14 }}>불러오는 중...</span>
+          <span className="text-md text-text-tertiary">불러오는 중...</span>
         </div>
       </div>
     )
@@ -77,116 +77,62 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+      <div className="flex flex-col min-h-screen bg-surface">
         <Header />
         <div className="flex items-center justify-center flex-1">
-          <span style={{ color: '#EF4444', fontSize: 14 }}>프로젝트를 찾을 수 없습니다.</span>
+          <span className="text-md text-danger">프로젝트를 찾을 수 없습니다.</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+    <div className="flex flex-col min-h-screen bg-surface">
       <Header />
 
-      <main
-        style={{
-          maxWidth: 1280,
-          margin: '0 auto',
-          width: '100%',
-          padding: '32px 32px 80px',
-        }}
-      >
+      <main className="max-w-[1280px] mx-auto w-full px-8 pt-8 pb-20">
         {/* Title */}
-        <div style={{ marginBottom: 24 }}>
+        <div className="mb-6">
           {isEditingTitle ? (
-            <div
-              className="flex items-center"
-              style={{
-                border: '2px solid #3B5BDB',
-                borderRadius: 12,
-                background: '#ffffff',
-                padding: '0 16px',
-                height: 64,
-              }}
-            >
+            <div className="flex items-center border-2 border-primary rounded-lg bg-card px-4 h-16">
               <input
                 autoFocus
                 value={titleDraft}
                 onChange={e => setTitleDraft(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
-                style={{
-                  flex: 1,
-                  fontSize: 26,
-                  fontWeight: 700,
-                  color: '#1A1A1A',
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                }}
+                className="flex-1 text-[26px] font-bold text-text-primary border-none outline-none bg-transparent"
               />
               <button
                 onClick={handleTitleSave}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#3B5BDB',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: 4,
-                  flexShrink: 0,
-                }}
+                className="bg-transparent border-none cursor-pointer text-primary flex items-center p-1 shrink-0"
               >
                 <IconCheck width={22} height={22} />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
-                {project.name}
-              </h1>
+              <h1 className="text-[26px] font-bold text-text-primary m-0">{project.name}</h1>
               <button
                 onClick={handleTitleEdit}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9E9E9E',
-                  padding: 4,
-                  borderRadius: 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
+                className="bg-transparent border-none cursor-pointer text-text-tertiary p-1 rounded-sm flex items-center"
                 title="프로젝트 이름 수정"
               >
-                <IconEdit width={16} height={16} style={{ opacity: 0.5 }} />
+                <IconEdit width={16} height={16} className="opacity-50" />
               </button>
               <button
                 onClick={handleDeleteProject}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9E9E9E',
-                  padding: 4,
-                  borderRadius: 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginLeft: 'auto',
-                }}
+                className="bg-transparent border-none cursor-pointer text-text-tertiary p-1 rounded-sm flex items-center ml-auto"
                 title="프로젝트 삭제"
               >
-                <IconTrash width={16} height={16} style={{ opacity: 0.5 }} />
+                <IconTrash width={16} height={16} className="opacity-50" />
               </button>
             </div>
           )}
         </div>
 
         {/* Meeting list + Calendar */}
-        <div className="flex gap-4" style={{ alignItems: 'stretch' }}>
-          <div style={{ width: 300, flexShrink: 0, display: 'flex' }}>
+        <div className="flex gap-4 items-stretch">
+          <div className="w-[300px] shrink-0 flex">
             <MeetingList
               projectId={projectId}
               meetings={project.meetings ?? []}
@@ -208,25 +154,15 @@ export default function ProjectPage() {
         </div>
 
         {/* Memo section */}
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #E5E5E5',
-            borderRadius: 12,
-            padding: '16px 20px',
-            marginTop: 24,
-          }}
-        >
-          <div className="flex items-center gap-2" style={{ marginBottom: memosData?.items.length ? 16 : 0 }}>
+        <div className="bg-card border border-border rounded-lg px-5 py-4 mt-6">
+          <div className={['flex items-center gap-2', memosData?.items.length ? 'mb-4' : ''].join(' ')}>
             <IconMemo width={16} height={16} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>메모</span>
+            <span className="text-md font-semibold text-text-primary">메모</span>
           </div>
           {memosData && memosData.items.length > 0 ? (
             <MemoSection memos={memosData.items} meetings={project.meetings ?? []} />
           ) : (
-            <div style={{ color: '#9E9E9E', fontSize: 13, padding: '8px 0' }}>
-              회의 메모가 없습니다.
-            </div>
+            <div className="text-base text-text-tertiary py-2">회의 메모가 없습니다.</div>
           )}
         </div>
       </main>

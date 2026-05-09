@@ -66,94 +66,50 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
 
   const displayDate = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
 
-  const cardStyle = {
-    background: '#ffffff',
-    border: '1px solid #e5e7eb',
-    borderRadius: 10,
-    padding: 25,
-  }
-
-  const sectionHeadingStyle = {
-    fontSize: 18,
-    fontWeight: 600,
-    color: '#0a0a0a',
-  }
+  const card = 'bg-card border border-card-border rounded-[10px] p-[25px]'
+  const sectionHeading = 'text-xl font-semibold text-title'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 24 }}>
+    <div className="flex flex-col gap-6">
 
       {/* ── Header card ── */}
       {isEditing ? (
-        <div
-          style={{
-            ...cardStyle,
-            border: '2px solid #004fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-          }}
-        >
+        <div className={`${card} border-2 border-primary flex items-center justify-between gap-4`}>
           <input
             autoFocus
             value={titleDraft}
             onChange={e => setTitleDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
-            style={{
-              flex: 1,
-              fontSize: 26,
-              fontWeight: 700,
-              color: '#0a0a0a',
-              border: 'none',
-              outline: 'none',
-              background: 'transparent',
-              fontFamily: 'inherit',
-            }}
+            className="flex-1 text-[26px] font-bold text-title border-none outline-none bg-transparent font-[inherit]"
           />
           <input
             type="date"
             value={dateDraft}
             onChange={e => setDateDraft(e.target.value)}
-            style={{
-              fontSize: 15,
-              color: '#4a5565',
-              border: 'none',
-              outline: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              flexShrink: 0,
-            }}
+            className="text-lg text-subtitle border-none outline-none bg-transparent cursor-pointer font-[inherit] shrink-0"
           />
           <button
             onClick={handleEditSave}
             disabled={updateMeeting.isPending}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+            className="bg-transparent border-none cursor-pointer p-0 shrink-0"
           >
             <IconCheck width={20} height={20} className="text-primary" />
           </button>
         </div>
       ) : (
-        <div
-          style={{
-            ...cardStyle,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 style={{ fontSize: 30, fontWeight: 700, color: '#0a0a0a', margin: 0, letterSpacing: '0.4px' }}>
+        <div className={`${card} flex items-center justify-between`}>
+          <div className="flex items-center gap-3">
+            <h1 className="text-[30px] font-bold text-title m-0 tracking-[0.4px]">
               {meeting.title}
             </h1>
             <button
               onClick={handleEditStart}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+              className="bg-transparent border-none cursor-pointer p-0 flex"
             >
-              <IconEdit width={20} height={20} style={{ color: '#9e9e9e' }} />
+              <IconEdit width={20} height={20} className="text-text-tertiary" />
             </button>
           </div>
-          <span style={{ fontSize: 16, color: '#4a5565', letterSpacing: '-0.31px', flexShrink: 0 }}>
+          <span className="text-[16px] text-subtitle tracking-[-0.31px] shrink-0">
             {displayDate}
           </span>
         </div>
@@ -161,115 +117,91 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
 
       {/* ── Summary ── */}
       {meeting.summary && (
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <div className={card}>
+          <div className="flex items-center gap-2 mb-4">
             <IconChat width={20} height={20} className="text-primary" />
-            <span style={sectionHeadingStyle}>회의 요약</span>
+            <span className={sectionHeading}>회의 요약</span>
           </div>
-          <p style={{ fontSize: 16, color: '#364153', lineHeight: '26px', margin: 0, letterSpacing: '-0.31px' }}>
+          <p className="text-[16px] text-body leading-[26px] m-0 tracking-[-0.31px]">
             {meeting.summary}
           </p>
         </div>
       )}
 
       {/* ── Script + Right column ── */}
-      <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start' }}>
+      <div className="flex gap-7 items-start">
 
         {/* Script */}
-        <div style={{ ...cardStyle, flex: 1, minWidth: 0, padding: '25px 25px 1px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+        <div className={`${card} flex-1 min-w-0 pt-[25px] px-[25px] pb-px`}>
+          <div className="flex items-center gap-2 mb-6">
             <IconPlay width={20} height={20} />
-            <span style={{ fontSize: 20, fontWeight: 600, color: '#0a0a0a', letterSpacing: '-0.45px' }}>
+            <span className="text-[20px] font-semibold text-title tracking-[-0.45px]">
               회의 스크립트
             </span>
           </div>
           {meeting.scripts && meeting.scripts.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxHeight: 600, overflowY: 'auto', paddingBottom: 24 }}>
+            <div className="flex flex-col gap-6 max-h-[600px] overflow-y-auto pb-6">
               {meeting.scripts.map((seg, i) => (
-                <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 14, color: '#e5e5e8', minWidth: 48, flexShrink: 0, letterSpacing: '-0.15px' }}>
+                <div key={i} className="flex gap-4 items-start">
+                  <span className="text-md text-[#e5e5e8] min-w-[48px] shrink-0 tracking-[-0.15px]">
                     {formatSeconds(seg.startTime)}
                   </span>
-                  <p style={{ fontSize: 16, color: '#364153', lineHeight: '24px', margin: 0, letterSpacing: '-0.31px' }}>
+                  <p className="text-[16px] text-body leading-6 m-0 tracking-[-0.31px]">
                     {seg.contents}
                   </p>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ color: '#9E9E9E', fontSize: 14, paddingBottom: 24 }}>스크립트가 없습니다.</div>
+            <div className="text-md text-text-tertiary pb-6">스크립트가 없습니다.</div>
           )}
         </div>
 
         {/* Right column */}
-        <div style={{ width: 319, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="w-[319px] shrink-0 flex flex-col gap-6">
 
           {/* Memo */}
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div className={card}>
+            <div className="flex items-center gap-2 mb-4">
               <IconMemo width={20} height={20} />
-              <span style={sectionHeadingStyle}>회의 메모</span>
+              <span className={sectionHeading}>회의 메모</span>
             </div>
             <textarea
               value={memoDraft}
               onChange={e => handleMemoChange(e.target.value)}
               onBlur={handleMemoBlur}
               placeholder="회의 메모를 입력하세요..."
-              style={{
-                width: '100%',
-                minHeight: 100,
-                border: 'none',
-                outline: 'none',
-                resize: 'vertical',
-                fontSize: 16,
-                color: '#364153',
-                lineHeight: '1.6',
-                background: 'transparent',
-                fontFamily: 'inherit',
-                letterSpacing: '-0.35px',
-              }}
+              className="w-full min-h-[100px] border-none outline-none resize-y text-[16px] text-body leading-relaxed bg-transparent font-[inherit] tracking-[-0.35px]"
             />
           </div>
 
           {/* Schedules */}
-          <div style={{ ...cardStyle, paddingBottom: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={`${card} pb-px`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
                 <IconCalendar width={20} height={20} />
-                <span style={sectionHeadingStyle}>정해진 일정</span>
+                <span className={sectionHeading}>정해진 일정</span>
               </div>
-              <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#6b7280', display: 'flex', padding: 0 }}
-              >
+              <button className="bg-transparent border-none cursor-pointer text-[20px] text-[#6b7280] flex p-0">
                 +
               </button>
             </div>
             {meeting.schedules && meeting.schedules.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 24 }}>
+              <div className="flex flex-col gap-2 pb-6">
                 {meeting.schedules.map((s: Schedule) => (
                   <div
                     key={s.id}
-                    style={{
-                      background: '#f0fff2',
-                      border: '1px solid #d7f9d0',
-                      borderRadius: 8,
-                      padding: '10px 17px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
+                    className="bg-schedule-item border border-schedule-item-border rounded-md px-[17px] py-2.5 flex items-center justify-between"
                   >
-                    <span style={{ fontSize: 16, color: '#000000', letterSpacing: '-0.35px' }}>
-                      {s.title}
-                    </span>
-                    <span style={{ fontSize: 12, color: '#909090', letterSpacing: '-0.26px' }}>
+                    <span className="text-[16px] text-title tracking-[-0.35px]">{s.title}</span>
+                    <span className="text-sm text-[#909090] tracking-[-0.26px]">
                       {s.startTime.slice(0, 10)}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ color: '#9E9E9E', fontSize: 14, paddingBottom: 24 }}>추출된 일정이 없습니다.</div>
+              <div className="text-md text-text-tertiary pb-6">추출된 일정이 없습니다.</div>
             )}
           </div>
         </div>

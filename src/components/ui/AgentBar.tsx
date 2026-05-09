@@ -81,46 +81,12 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
   if (!isOpen) return null
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: 'rgba(0,0,0,0.04)',
-        zIndex: 40,
-        padding: '0 0 16px',
-      }}
-    >
-      <div
-        className="flex items-center gap-3"
-        style={{
-          maxWidth: 760,
-          margin: '0 auto',
-          background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 32,
-          padding: '8px 8px 8px 20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-        }}
-      >
+    <div className="fixed bottom-0 left-0 right-0 bg-black/[0.04] z-40 pb-4">
+      <div className="flex items-center gap-3 max-w-[760px] mx-auto bg-card border border-border rounded-full px-5 py-2 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         {/* Close */}
         <button
           onClick={close}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            border: '1px solid #E5E5E5',
-            background: '#ffffff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-            color: '#6B6B6B',
-            flexShrink: 0,
-          }}
+          className="w-8 h-8 rounded-full border border-border bg-card cursor-pointer flex items-center justify-center text-base text-text-secondary shrink-0"
         >
           ×
         </button>
@@ -133,33 +99,17 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
           onKeyDown={handleKeyDown}
           placeholder="에이전트에게 물어보세요"
           disabled={isStreaming}
-          style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            fontSize: 14,
-            color: '#1A1A1A',
-            background: 'transparent',
-          }}
+          className="flex-1 border-none outline-none text-md text-text-primary bg-transparent"
         />
 
         {/* Send */}
         <button
           onClick={handleSend}
           disabled={!inputText.trim() || isStreaming}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: inputText.trim() ? '#3B5BDB' : '#E5E5E5',
-            border: 'none',
-            cursor: inputText.trim() ? 'pointer' : 'default',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            transition: 'background 0.15s',
-          }}
+          className={[
+            'w-9 h-9 rounded-full border-none cursor-pointer flex items-center justify-center shrink-0 transition-colors',
+            inputText.trim() ? 'bg-primary' : 'bg-border cursor-default',
+          ].join(' ')}
         >
           <IconSend width={16} height={16} />
         </button>

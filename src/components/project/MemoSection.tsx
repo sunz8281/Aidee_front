@@ -38,97 +38,43 @@ function MemoCard({ memo, meetings }: MemoCardProps) {
 
   if (editing) {
     return (
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #004fff',
-          borderRadius: 10,
-          padding: '12px 14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          position: 'relative',
-        }}
-      >
+      <div className="bg-card border border-primary rounded-[10px] px-[14px] py-3 flex flex-col gap-2.5 relative">
         {/* Content + save icon */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div className="flex items-start justify-between gap-2">
           <textarea
             autoFocus
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => { if (e.key === 'Escape') handleCancel() }}
-            style={{
-              flex: 1,
-              fontSize: 13,
-              color: '#364153',
-              lineHeight: '1.6',
-              border: 'none',
-              outline: 'none',
-              background: 'transparent',
-              resize: 'none',
-              padding: 0,
-              fontFamily: 'inherit',
-              minHeight: 60,
-            }}
+            className="flex-1 text-base text-body leading-relaxed border-none outline-none bg-transparent resize-none p-0 min-h-[60px] font-[inherit]"
           />
           <button
             onClick={handleSave}
             disabled={update.isPending}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+            className="bg-transparent border-none cursor-pointer p-0 shrink-0"
           >
             <IconCheck width={18} height={18} className="text-primary" />
           </button>
         </div>
 
         {/* Meeting selector */}
-        <div style={{ position: 'relative' }}>
+        <div className="relative">
           <button
             onClick={() => setDropdownOpen(v => !v)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: 4,
-              width: '100%',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-            }}
+            className="flex items-center justify-end gap-1 w-full bg-transparent border-none cursor-pointer p-0"
           >
-            <span style={{ fontSize: 10, color: '#929292' }}>▾</span>
-            <span style={{ fontSize: 12, color: '#929292' }}>
+            <span className="text-xs text-[#929292]">▾</span>
+            <span className="text-sm text-[#929292]">
               {selectedMeeting?.title ?? memo.meetingTitle}
             </span>
           </button>
 
           {dropdownOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 'calc(100% + 4px)',
-                right: 0,
-                background: '#ffffff',
-                border: '1px solid #dedede',
-                borderRadius: 8,
-                zIndex: 100,
-                overflow: 'hidden',
-                minWidth: 120,
-                maxHeight: 160,
-                overflowY: 'auto',
-              }}
-            >
+            <div className="absolute bottom-[calc(100%+4px)] right-0 bg-card border border-[#dedede] rounded-md z-[100] overflow-hidden min-w-[120px] max-h-[160px] overflow-y-auto">
               <div
                 onMouseDown={e => e.stopPropagation()}
                 onClick={() => { setSelectedMeetingId(null); setDropdownOpen(false) }}
-                style={{
-                  padding: '6px 8px',
-                  fontSize: 12,
-                  color: '#808080',
-                  cursor: 'pointer',
-                  background: selectedMeetingId === null ? '#c7d8ff' : '#ffffff',
-                  whiteSpace: 'nowrap',
-                }}
+                className={['px-2 py-1.5 text-sm text-text-secondary cursor-pointer whitespace-nowrap', selectedMeetingId === null ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
               >
                 선택안함
               </div>
@@ -137,16 +83,7 @@ function MemoCard({ memo, meetings }: MemoCardProps) {
                   key={m.id}
                   onMouseDown={e => e.stopPropagation()}
                   onClick={() => { setSelectedMeetingId(m.id); setDropdownOpen(false) }}
-                  style={{
-                    padding: '6px 8px',
-                    fontSize: 12,
-                    color: '#000000',
-                    cursor: 'pointer',
-                    background: m.id === selectedMeetingId ? '#c7d8ff' : '#ffffff',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
+                  className={['px-2 py-1.5 text-sm text-title cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis', m.id === selectedMeetingId ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
                 >
                   {m.title}
                 </div>
@@ -160,34 +97,22 @@ function MemoCard({ memo, meetings }: MemoCardProps) {
 
   /* ── VIEW MODE ── */
   return (
-    <div
-      style={{
-        background: '#FFFDE7',
-        border: '1px solid #FFF176',
-        borderRadius: 10,
-        padding: '12px 14px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: 20,
-        minHeight: 100,
-      }}
-    >
+    <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[14px] py-3 flex flex-col justify-between gap-5 min-h-[100px]">
       {/* Content + edit icon */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ fontSize: 13, color: '#364153', lineHeight: '1.6', whiteSpace: 'pre-line', flex: 1 }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-base text-body leading-relaxed whitespace-pre-line flex-1">
           {memo.memo}
         </div>
         <button
           onClick={() => setEditing(true)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+          className="bg-transparent border-none cursor-pointer p-0 shrink-0"
         >
-          <IconEdit width={18} height={18} style={{ color: '#929292' }} />
+          <IconEdit width={18} height={18} className="text-[#929292]" />
         </button>
       </div>
 
       {/* Meeting name */}
-      <div style={{ fontSize: 12, color: '#929292', textAlign: 'right' }}>
+      <div className="text-sm text-[#929292] text-right">
         {memo.meetingTitle}
       </div>
     </div>
@@ -203,13 +128,7 @@ export function MemoSection({ memos, meetings }: MemoSectionProps) {
   if (memos.length === 0) return null
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 12,
-      }}
-    >
+    <div className="grid grid-cols-4 gap-3">
       {memos.map((memo, i) => (
         <MemoCard key={`${memo.meetingId}-${i}`} memo={memo} meetings={meetings} />
       ))}

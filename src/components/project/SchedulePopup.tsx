@@ -45,9 +45,7 @@ export function SchedulePopup({
   const [allDay, setAllDay] = useState(schedule.allDay)
   const [startVal, setStartVal] = useState(toInputValue(schedule.startTime, schedule.allDay))
   const [endVal, setEndVal] = useState(toInputValue(schedule.endTime, schedule.allDay))
-  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
-    schedule.meetingId ?? null,
-  )
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(schedule.meetingId ?? null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const update = useUpdateSchedule(projectId)
@@ -93,52 +91,41 @@ export function SchedulePopup({
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
-  const baseStyle = {
-    position: 'fixed' as const,
-    left: x,
-    top: y,
-    width: POPUP_W,
-    borderRadius: 4,
-    boxShadow: '0px 4px 12px rgba(0,0,0,0.12)',
-    padding: '10px 14px',
-    zIndex: 1000,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 10,
-  }
-
   /* ── VIEW MODE ── */
   if (mode === 'view') {
     return (
-      <div ref={popupRef} style={{ ...baseStyle, background: '#dcfce7' }}>
+      <div
+        ref={popupRef}
+        className="fixed z-[1000] flex flex-col gap-2.5 rounded-sm shadow-[0px_4px_12px_rgba(0,0,0,0.12)] px-[14px] py-2.5 bg-schedule-chip"
+        style={{ left: x, top: y, width: POPUP_W }}
+      >
         <div className="flex items-start justify-between">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1, marginRight: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#008236' }}>
+          <div className="flex flex-col gap-1.5 min-w-0 flex-1 mr-2">
+            <span className="text-sm font-bold text-schedule-chip-text">
               {schedule.title}
             </span>
             {schedule.meetingId && sourceMeeting && (
               <Link
                 href={`/projects/${projectId}/meetings/${schedule.meetingId}`}
                 onClick={onClose}
-                className="flex items-center gap-1"
-                style={{ fontSize: 12, color: '#008236', textDecoration: 'none' }}
+                className="flex items-center gap-1 text-sm text-schedule-chip-text no-underline"
               >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap">
                   {sourceMeeting.title}
                 </span>
-                <span style={{ fontSize: 11, flexShrink: 0 }}>↗</span>
+                <span className="text-xs shrink-0">↗</span>
               </Link>
             )}
           </div>
           <button
             onClick={() => setMode('edit')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+            className="bg-transparent border-none cursor-pointer p-0 shrink-0"
           >
-            <IconEdit width={16} height={16} style={{ color: '#008236' }} />
+            <IconEdit width={16} height={16} className="text-schedule-chip-text" />
           </button>
         </div>
 
-        <div style={{ fontSize: 12, color: '#808080', lineHeight: '18px' }}>
+        <div className="text-sm text-[#808080] leading-[18px]">
           <div>{formatDateTime(schedule.startTime, schedule.allDay)}</div>
           <div>~ {formatDateTime(schedule.endTime, schedule.allDay)}</div>
         </div>
@@ -150,7 +137,8 @@ export function SchedulePopup({
   return (
     <div
       ref={popupRef}
-      style={{ ...baseStyle, background: '#ffffff', border: '1px solid #004fff', overflow: 'visible' }}
+      className="fixed z-[1000] flex flex-col gap-2.5 rounded-sm shadow-[0px_4px_12px_rgba(0,0,0,0.12)] px-[14px] py-2.5 bg-card border border-primary overflow-visible"
+      style={{ left: x, top: y, width: POPUP_W }}
     >
       {/* Title + save */}
       <div className="flex items-center justify-between gap-2">
@@ -159,82 +147,35 @@ export function SchedulePopup({
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
-          style={{
-            flex: 1,
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#000000',
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            padding: 0,
-          }}
+          className="flex-1 text-sm font-bold text-title border-none outline-none bg-transparent p-0"
         />
         <button
           onClick={handleSave}
           disabled={update.isPending}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+          className="bg-transparent border-none cursor-pointer p-0 shrink-0"
         >
           <IconCheck width={16} height={16} className="text-primary" />
         </button>
       </div>
 
       {/* Meeting selector */}
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         <button
           onClick={() => setDropdownOpen(v => !v)}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 4,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-          }}
+          className="w-full flex items-center justify-between gap-1 bg-transparent border-none cursor-pointer p-0"
         >
-          <span
-            style={{
-              fontSize: 12,
-              color: selectedMeeting ? '#000000' : '#b0b0b0',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <span className={['text-sm overflow-hidden text-ellipsis whitespace-nowrap', selectedMeeting ? 'text-title' : 'text-[#b0b0b0]'].join(' ')}>
             {selectedMeeting?.title ?? '연결된 회의 없음'}
           </span>
-          <span style={{ fontSize: 10, color: '#808080', flexShrink: 0 }}>▾</span>
+          <span className="text-[10px] text-[#808080] shrink-0">▾</span>
         </button>
 
         {dropdownOpen && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              left: 0,
-              width: '100%',
-              background: '#ffffff',
-              border: '1px solid #dedede',
-              borderRadius: 8,
-              zIndex: 1002,
-              overflow: 'hidden',
-              maxHeight: 160,
-              overflowY: 'auto',
-            }}
-          >
+          <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-card border border-[#dedede] rounded-md z-[1002] overflow-hidden max-h-[160px] overflow-y-auto">
             <div
               onMouseDown={e => e.stopPropagation()}
               onClick={() => { setSelectedMeetingId(null); setDropdownOpen(false) }}
-              style={{
-                padding: '6px 8px',
-                fontSize: 12,
-                color: '#808080',
-                cursor: 'pointer',
-                background: selectedMeetingId === null ? '#c7d8ff' : '#ffffff',
-              }}
+              className={['px-2 py-1.5 text-sm text-[#808080] cursor-pointer', selectedMeetingId === null ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
             >
               없음
             </div>
@@ -243,16 +184,7 @@ export function SchedulePopup({
                 key={m.id}
                 onMouseDown={e => e.stopPropagation()}
                 onClick={() => { setSelectedMeetingId(m.id); setDropdownOpen(false) }}
-                style={{
-                  padding: '6px 8px',
-                  fontSize: 12,
-                  color: '#000000',
-                  cursor: 'pointer',
-                  background: m.id === selectedMeetingId ? '#c7d8ff' : '#ffffff',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+                className={['px-2 py-1.5 text-sm text-title cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap', m.id === selectedMeetingId ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
               >
                 {m.title}
               </div>
@@ -262,32 +194,32 @@ export function SchedulePopup({
       </div>
 
       {/* All-day */}
-      <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={allDay}
           onChange={e => handleAllDayChange(e.target.checked)}
-          style={{ width: 12, height: 12, accentColor: '#004fff', cursor: 'pointer' }}
+          className="w-3 h-3 cursor-pointer accent-primary"
         />
-        <span style={{ fontSize: 12, color: allDay ? '#000000' : '#808080' }}>
+        <span className={['text-sm', allDay ? 'text-title' : 'text-[#808080]'].join(' ')}>
           하루 종일
         </span>
       </label>
 
       {/* Date/time */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div className="flex flex-col gap-1">
         <input
           type={allDay ? 'date' : 'datetime-local'}
           value={startVal}
           onChange={e => setStartVal(e.target.value)}
-          style={{ fontSize: 11, color: '#808080', border: 'none', outline: 'none', background: 'transparent', padding: 0, width: '100%' }}
+          className="text-xs text-[#808080] border-none outline-none bg-transparent p-0 w-full"
         />
-        <span style={{ fontSize: 11, color: '#c0c0c0' }}>~</span>
+        <span className="text-xs text-[#c0c0c0]">~</span>
         <input
           type={allDay ? 'date' : 'datetime-local'}
           value={endVal}
           onChange={e => setEndVal(e.target.value)}
-          style={{ fontSize: 11, color: '#808080', border: 'none', outline: 'none', background: 'transparent', padding: 0, width: '100%' }}
+          className="text-xs text-[#808080] border-none outline-none bg-transparent p-0 w-full"
         />
       </div>
 
@@ -295,11 +227,10 @@ export function SchedulePopup({
       <button
         onClick={handleDelete}
         disabled={del.isPending}
-        className="flex items-center gap-1"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, alignSelf: 'flex-start' }}
+        className="flex items-center gap-1 bg-transparent border-none cursor-pointer p-0 self-start"
       >
         <IconTrash width={11} height={11} className="text-danger" />
-        <span style={{ fontSize: 11 }} className="text-danger">삭제</span>
+        <span className="text-xs text-danger">삭제</span>
       </button>
     </div>
   )

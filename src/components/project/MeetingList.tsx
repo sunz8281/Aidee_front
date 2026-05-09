@@ -15,44 +15,17 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
   const firstMeeting = meetings[0]
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #E5E5E5',
-        borderRadius: 12,
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-      }}
-    >
+    <div className="bg-card border border-border rounded-lg flex flex-col w-full">
       {/* Header */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: '16px 20px 12px', flexShrink: 0 }}
-      >
+      <div className="flex items-center justify-between px-5 pt-4 pb-3 shrink-0">
         <div className="flex items-center gap-2">
           <IconChat width={16} height={16} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>
-            최근 회의
-          </span>
+          <span className="text-md font-semibold text-text-primary">최근 회의</span>
         </div>
         <button
           onClick={onAdd}
           disabled={isCreating}
-          style={{
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#3B5BDB',
-            fontSize: 18,
-            fontWeight: 500,
-          }}
+          className="w-6 h-6 rounded-[6px] bg-transparent border-none cursor-pointer flex items-center justify-center text-primary text-xl font-medium disabled:opacity-50"
           title="새 회의 추가"
         >
           +
@@ -60,33 +33,17 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
       </div>
 
       {/* List */}
-      <div style={{ flex: 1 }}>
+      <div className="flex-1">
         {meetings.length === 0 && (
-          <div
-            style={{ padding: '24px 20px', color: '#9E9E9E', fontSize: 13, textAlign: 'center' }}
-          >
+          <div className="px-5 py-6 text-base text-text-tertiary text-center">
             회의가 없습니다
           </div>
         )}
         {meetings.map(meeting => (
           <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`}>
-            <div
-              style={{
-                padding: '10px 20px',
-                cursor: 'pointer',
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.background = '#F8F9FF'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.background = 'transparent'
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A', marginBottom: 2 }}>
-                {meeting.title}
-              </div>
-              <div style={{ fontSize: 12, color: '#9E9E9E' }}>
+            <div className="px-5 py-2.5 cursor-pointer transition-colors hover:bg-[#F8F9FF]">
+              <div className="text-md font-medium text-text-primary mb-0.5">{meeting.title}</div>
+              <div className="text-sm text-text-tertiary">
                 {meeting.meetingAt
                   ? new Date(meeting.meetingAt).toLocaleDateString('ko-KR')
                   : new Date(meeting.createdAt).toLocaleDateString('ko-KR')}
@@ -97,33 +54,18 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
       </div>
 
       {/* Footer */}
-      <div style={{ flexShrink: 0 }}>
+      <div className="shrink-0">
         {firstMeeting ? (
           <Link href={`/projects/${projectId}/meetings/${firstMeeting.id}`}>
-            <div
-              className="flex items-center justify-end gap-1"
-              style={{
-                padding: '12px 20px',
-                fontSize: 13,
-                color: '#6B6B6B',
-                cursor: 'pointer',
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.color = '#3B5BDB'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.color = '#6B6B6B'
-              }}
-            >
+            <div className="flex items-center justify-end gap-1 px-5 py-3 text-base text-text-secondary cursor-pointer transition-colors hover:text-primary">
               전체보기
-              <span style={{ fontSize: 15 }}>›</span>
+              <span className="text-lg">›</span>
             </div>
           </Link>
         ) : (
-          <div className="flex items-center justify-end gap-1" style={{ padding: '12px 20px', fontSize: 13, color: '#BDBDBD' }}>
+          <div className="flex items-center justify-end gap-1 px-5 py-3 text-base text-text-placeholder">
             전체보기
-            <span style={{ fontSize: 15 }}>›</span>
+            <span className="text-lg">›</span>
           </div>
         )}
       </div>

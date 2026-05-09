@@ -1,13 +1,13 @@
 import type { SVGProps } from 'react'
 
-export function IconMic({ style, ...props }: SVGProps<SVGSVGElement>) {
+export function IconMic({ className = 'text-text-tertiary', ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width={24}
       height={24}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ color: '#9E9E9E', ...style }}
+      className={className}
       {...props}
     >
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor" />

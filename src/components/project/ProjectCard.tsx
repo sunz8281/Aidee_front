@@ -17,59 +17,26 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Link href={`/projects/${project.id}`}>
-      <div
-        className="cursor-pointer transition-shadow"
-        style={{
-          background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 12,
-          padding: '20px 20px 24px',
-          minHeight: 140,
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'
-        }}
-      >
+      <div className="bg-card border border-border rounded-lg p-5 pb-6 min-h-[140px] cursor-pointer transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
         {/* Icon */}
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: '#EEF2FF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 12,
-          }}
-        >
+        <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center mb-3">
           <IconChat width={20} height={20} className="text-primary" />
         </div>
 
         {/* Name */}
-        <div
-          style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: '#1A1A1A',
-            marginBottom: 8,
-          }}
-        >
+        <div className="text-lg font-semibold text-text-primary mb-2">
           {project.name}
         </div>
 
         {/* Meta */}
-        <div style={{ fontSize: 12, color: '#9E9E9E', lineHeight: '20px' }}>
+        <div className="text-sm text-text-tertiary leading-5">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <IconChat width={13} height={13} style={{ opacity: 0.5 }} />
+              <IconChat width={13} height={13} className="text-text-tertiary opacity-50" />
               <span>{project.meetingsCount}개 회의</span>
             </div>
             <div className="flex items-center gap-1">
-              <IconCalendar width={13} height={13} style={{ opacity: 0.5 }} />
+              <IconCalendar width={13} height={13} className="text-text-tertiary opacity-50" />
               <span>{project.schedulesCount}개 일정</span>
             </div>
           </div>

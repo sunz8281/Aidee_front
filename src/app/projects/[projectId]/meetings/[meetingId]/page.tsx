@@ -57,10 +57,10 @@ export default function MeetingPage() {
 
   if (meetingLoading) {
     return (
-      <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+      <div className="flex flex-col min-h-screen bg-surface">
         <Header />
         <div className="flex items-center justify-center flex-1">
-          <span style={{ color: '#9E9E9E', fontSize: 14 }}>불러오는 중...</span>
+          <span className="text-md text-text-tertiary">불러오는 중...</span>
         </div>
       </div>
     )
@@ -68,10 +68,10 @@ export default function MeetingPage() {
 
   if (!meeting) {
     return (
-      <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+      <div className="flex flex-col min-h-screen bg-surface">
         <Header />
         <div className="flex items-center justify-center flex-1">
-          <span style={{ color: '#EF4444', fontSize: 14 }}>회의를 찾을 수 없습니다.</span>
+          <span className="text-md text-danger">회의를 찾을 수 없습니다.</span>
         </div>
       </div>
     )
@@ -80,31 +80,15 @@ export default function MeetingPage() {
   const meetings = meetingsData?.items ?? []
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>
+    <div className="flex flex-col min-h-screen bg-surface">
       <Header />
 
-      <div className="flex flex-1" style={{ overflow: 'hidden' }}>
+      <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
-        <main
-          style={{
-            flex: 1,
-            padding: '24px 32px 80px',
-            overflowY: 'auto',
-          }}
-        >
+        <main className="flex-1 px-8 pt-6 pb-20 overflow-y-auto">
           {/* Back link */}
           <Link href={`/projects/${projectId}`}>
-            <span
-              style={{
-                fontSize: 13,
-                color: '#6B6B6B',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                marginBottom: 16,
-              }}
-            >
+            <span className="text-base text-text-secondary cursor-pointer inline-flex items-center gap-1 mb-4">
               ‹ 프로젝트로 돌아가기
             </span>
           </Link>
@@ -113,115 +97,52 @@ export default function MeetingPage() {
           {meeting.status === 'pending' || meeting.status === 'processing' ? (
             meeting.status === 'processing' ? (
               // Processing - spinner
-              <div
-                className="flex flex-col items-center justify-center"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 10,
-                  padding: 48,
-                  minHeight: 582,
-                }}
-              >
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    border: '3px solid #E5E5E5',
-                    borderTopColor: '#3B5BDB',
-                    animation: 'spin 0.8s linear infinite',
-                    marginBottom: 20,
-                  }}
-                />
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 8 }}>
-                  파일을 처리하고 있습니다
-                </div>
-                <div style={{ fontSize: 13, color: '#9E9E9E' }}>
-                  잠시만 기다려주세요. 곧 회의 기록이 생성됩니다.
-                </div>
+              <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
+                <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
+                <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
+                <div className="text-base text-text-tertiary">잠시만 기다려주세요. 곧 회의 기록이 생성됩니다.</div>
               </div>
             ) : (
               // Pending - header card + recording panel
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                {/* Header card — same style as done/failed */}
+              <div className="flex flex-col gap-6">
+                {/* Header card */}
                 {isEditing ? (
-                  <div
-                    style={{
-                      background: '#ffffff',
-                      border: '2px solid #004fff',
-                      borderRadius: 10,
-                      padding: 25,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 16,
-                    }}
-                  >
+                  <div className="bg-card border-2 border-primary rounded-[10px] p-[25px] flex items-center justify-between gap-4">
                     <input
                       autoFocus
                       value={titleDraft}
                       onChange={e => setTitleDraft(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
-                      style={{
-                        flex: 1,
-                        fontSize: 26,
-                        fontWeight: 700,
-                        color: '#0a0a0a',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontFamily: 'inherit',
-                      }}
+                      className="flex-1 text-[26px] font-bold text-title border-none outline-none bg-transparent font-[inherit]"
                     />
                     <input
                       type="date"
                       value={dateDraft}
                       onChange={e => setDateDraft(e.target.value)}
-                      style={{
-                        fontSize: 15,
-                        color: '#4a5565',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        flexShrink: 0,
-                      }}
+                      className="text-lg text-subtitle border-none outline-none bg-transparent cursor-pointer font-[inherit] shrink-0"
                     />
                     <button
                       onClick={handleEditSave}
                       disabled={updateMeeting.isPending}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+                      className="bg-transparent border-none cursor-pointer p-0 shrink-0"
                     >
                       <IconCheck width={20} height={20} className="text-primary" />
                     </button>
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      background: '#ffffff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 10,
-                      padding: 25,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <h1 style={{ fontSize: 30, fontWeight: 700, color: '#0a0a0a', margin: 0, letterSpacing: '0.4px' }}>
+                  <div className="bg-card border border-card-border rounded-[10px] p-[25px] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-[30px] font-bold text-title m-0 tracking-[0.4px]">
                         {meeting.title}
                       </h1>
                       <button
                         onClick={handleEditStart}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+                        className="bg-transparent border-none cursor-pointer p-0 flex"
                       >
-                        <IconEdit width={20} height={20} style={{ color: '#9e9e9e' }} />
+                        <IconEdit width={20} height={20} className="text-text-tertiary" />
                       </button>
                     </div>
-                    <span style={{ fontSize: 16, color: '#4a5565', letterSpacing: '-0.31px', flexShrink: 0 }}>
+                    <span className="text-[16px] text-subtitle tracking-[-0.31px] shrink-0">
                       {(meeting.meetingAt ?? meeting.createdAt).slice(0, 10)}
                     </span>
                   </div>
@@ -235,7 +156,6 @@ export default function MeetingPage() {
               </div>
             )
           ) : (
-            // Done or failed
             <MeetingDetail meeting={meeting} projectId={projectId} />
           )}
         </main>

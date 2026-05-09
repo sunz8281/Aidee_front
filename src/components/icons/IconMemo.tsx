@@ -1,13 +1,13 @@
 import type { SVGProps } from 'react'
 
-export function IconMemo({ style, ...props }: SVGProps<SVGSVGElement>) {
+export function IconMemo({ className = 'text-[#F59E0B]', ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width={24}
       height={24}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ color: '#F59E0B', ...style }}
+      className={className}
       {...props}
     >
       <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />

@@ -15,6 +15,8 @@ interface RecordingPanelProps {
   onAnalysisDone: () => void
 }
 
+const panelBase = 'flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]'
+
 export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: RecordingPanelProps) {
   const [state, setState] = useState<RecordingState>('idle')
   const [elapsed, setElapsed] = useState(0)
@@ -90,10 +92,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
       mediaRecorderRef.current.stop()
       streamRef.current?.getTracks().forEach(t => t.stop())
     }
-
-    // wait for data
     await new Promise<void>(resolve => setTimeout(resolve, 300))
-
     const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
     await uploadAndAnalyze(blob)
   }
@@ -155,33 +154,10 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
   // Processing state
   if (state === 'processing') {
     return (
-      <div
-        className="flex flex-col items-center justify-center"
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 10,
-          padding: 48,
-          minHeight: 582,
-        }}
-      >
-        {/* Spinner */}
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            border: '3px solid #E5E5E5',
-            borderTopColor: '#3B5BDB',
-            animation: 'spin 0.8s linear infinite',
-            marginBottom: 20,
-          }}
-        />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 8 }}>
-          파일을 처리하고 있습니다
-        </div>
-        <div style={{ fontSize: 13, color: '#9E9E9E' }}>
+      <div className={panelBase}>
+        <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
+        <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
+        <div className="text-base text-text-tertiary">
           {progressLabel || '잠시만 기다려주세요. 곧 회의 기록이 생성됩니다.'}
         </div>
       </div>
@@ -191,45 +167,13 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
   // Recording state
   if (state === 'recording') {
     return (
-      <div
-        className="flex flex-col items-center justify-center"
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 10,
-          padding: 48,
-          minHeight: 582,
-        }}
-      >
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: '50%',
-            background: '#FECACA',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-          }}
-        >
-          <IconMic width={32} height={32} style={{ color: '#EF4444' }} />
+      <div className={panelBase}>
+        <div className="w-[72px] h-[72px] rounded-full bg-recording flex items-center justify-center mb-5">
+          <IconMic width={32} height={32} className="text-recording-icon" />
         </div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
-          녹음 중입니다
-        </div>
-        <div style={{ fontSize: 13, color: '#9E9E9E', marginBottom: 20 }}>
-          페이지를 나가면 녹음이 중지됩니다.
-        </div>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#EF4444',
-            fontVariantNumeric: 'tabular-nums',
-            marginBottom: 20,
-          }}
-        >
+        <div className="text-xl font-semibold text-text-primary mb-1.5">녹음 중입니다</div>
+        <div className="text-base text-text-tertiary mb-5">페이지를 나가면 녹음이 중지됩니다.</div>
+        <div className="text-[28px] font-bold text-recording-icon tabular-nums mb-5">
           {formatTime(elapsed)}
         </div>
         <Button variant="danger" onClick={handlePause} size="md">
@@ -242,49 +186,17 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
   // Paused state
   if (state === 'paused') {
     return (
-      <div
-        className="flex flex-col items-center justify-center"
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 10,
-          padding: 48,
-          minHeight: 582,
-        }}
-      >
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: '50%',
-            background: '#F3F4F6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-          }}
-        >
+      <div className={panelBase}>
+        <div className="w-[72px] h-[72px] rounded-full bg-border-light flex items-center justify-center mb-5">
           <IconMic width={32} height={32} />
         </div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
-          녹음이 중지되었습니다.
-        </div>
-        <div style={{ fontSize: 13, color: '#9E9E9E', marginBottom: 20 }}>
-          녹음을 끝내시겠습니까?
-        </div>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: '#EF4444',
-            fontVariantNumeric: 'tabular-nums',
-            marginBottom: 24,
-          }}
-        >
+        <div className="text-xl font-semibold text-text-primary mb-1.5">녹음이 중지되었습니다.</div>
+        <div className="text-base text-text-tertiary mb-5">녹음을 끝내시겠습니까?</div>
+        <div className="text-[28px] font-bold text-recording-icon tabular-nums mb-6">
           {formatTime(elapsed)}
         </div>
-        <div className="flex gap-3" style={{ marginBottom: 12 }}>
-          <Button variant="outline" onClick={handleResume} size="md" style={{ color: '#3B5BDB', borderColor: '#3B5BDB' }}>
+        <div className="flex gap-3 mb-3">
+          <Button variant="outline" onClick={handleResume} size="md" className="text-primary border-primary">
             계속 녹음하기
           </Button>
           <Button variant="primary" onClick={handleFinish} size="md">
@@ -293,7 +205,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
         </div>
         <button
           onClick={handleDiscard}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#9E9E9E' }}
+          className="bg-transparent border-none cursor-pointer text-base text-text-tertiary"
         >
           녹음 삭제하기
         </button>
@@ -303,77 +215,27 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
 
   // Idle state
   return (
-    <div
-      className="flex flex-col items-center justify-center"
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 10,
-        padding: 48,
-        minHeight: 582,
-      }}
-    >
-      <div
-        style={{
-          width: 128,
-          height: 128,
-          borderRadius: '50%',
-          background: '#c7c7c7',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 27,
-        }}
-      >
-        <IconMic width={64} height={64} style={{ color: '#ffffff' }} />
+    <div className={panelBase}>
+      <div className="w-32 h-32 rounded-full bg-[#c7c7c7] flex items-center justify-center mb-7">
+        <IconMic width={64} height={64} className="text-white" />
       </div>
-      <div style={{ fontSize: 24, fontWeight: 600, color: '#0a0a0a', marginBottom: 12 }}>
-        녹음 시작하기
-      </div>
-      <div style={{ fontSize: 16, color: '#4a5565', marginBottom: 28, letterSpacing: '-0.31px' }}>
+      <div className="text-[24px] font-semibold text-title mb-3">녹음 시작하기</div>
+      <div className="text-[16px] text-subtitle tracking-[-0.31px] mb-7">
         녹음을 시작하거나 녹음 파일을 업로드합니다.
       </div>
-      <div className="flex flex-col gap-3" style={{ alignItems: 'center' }}>
-        <label
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 7,
-            padding: '12px 24px',
-            borderRadius: 10,
-            border: '2px solid #004fff',
-            cursor: 'pointer',
-            fontSize: 16,
-            color: '#004fff',
-            background: '#ffffff',
-            letterSpacing: '-0.31px',
-          }}
-        >
+      <div className="flex flex-col gap-3 items-center">
+        <label className="inline-flex items-center gap-[7px] px-6 py-3 rounded-[10px] border-2 border-primary cursor-pointer text-[16px] text-primary tracking-[-0.31px]">
           ↑ 녹음 파일 업로드
           <input
             type="file"
             accept=".mp3,.m4a,.wav,.webm"
             onChange={handleFileUpload}
-            style={{ display: 'none' }}
+            className="hidden"
           />
         </label>
         <button
           onClick={handleStartRecording}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 7,
-            padding: '12px 24px',
-            width: 184,
-            borderRadius: 10,
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 16,
-            color: '#ffffff',
-            background: '#004fff',
-            letterSpacing: '-0.31px',
-          }}
+          className="inline-flex items-center justify-center gap-[7px] px-6 py-3 w-[184px] rounded-[10px] border-none cursor-pointer text-[16px] text-white bg-primary tracking-[-0.31px]"
         >
           ⏺ 녹음 시작
         </button>

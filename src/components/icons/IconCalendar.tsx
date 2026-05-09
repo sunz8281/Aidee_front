@@ -1,13 +1,13 @@
 import type { SVGProps } from 'react'
 
-export function IconCalendar({ style, ...props }: SVGProps<SVGSVGElement>) {
+export function IconCalendar({ className = 'text-[#10B981]', ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width={24}
       height={24}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ color: '#10B981', ...style }}
+      className={className}
       {...props}
     >
       <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />

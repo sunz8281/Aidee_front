@@ -87,46 +87,35 @@ export function ProjectCalendar({
 
   return (
     <>
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 12,
-          padding: 20,
-          flex: 1,
-        }}
-      >
+      <div className="bg-card border border-border rounded-lg p-5 flex-1">
         {/* Navigation */}
-        <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={prevMonth}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B6B6B', fontSize: 18, padding: '0 4px' }}
+            className="bg-transparent border-none cursor-pointer text-text-secondary text-xl px-1"
           >
             ‹
           </button>
-          <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>
+          <span className="text-lg font-semibold text-text-primary">
             {year}년 {month}월
           </span>
           <button
             onClick={nextMonth}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B6B6B', fontSize: 18, padding: '0 4px' }}
+            className="bg-transparent border-none cursor-pointer text-text-secondary text-xl px-1"
           >
             ›
           </button>
         </div>
 
         {/* Day headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
+        <div className="grid grid-cols-7 mb-1">
           {DAY_LABELS.map((label, i) => (
             <div
               key={label}
-              style={{
-                textAlign: 'center',
-                fontSize: 12,
-                fontWeight: 500,
-                color: i === 0 ? '#EF4444' : i === 6 ? '#3B5BDB' : '#6B6B6B',
-                paddingBottom: 8,
-              }}
+              className={[
+                'text-center text-sm font-medium pb-2',
+                i === 0 ? 'text-danger' : i === 6 ? 'text-primary' : 'text-text-secondary',
+              ].join(' ')}
             >
               {label}
             </div>
@@ -134,7 +123,7 @@ export function ProjectCalendar({
         </div>
 
         {/* Cells */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+        <div className="grid grid-cols-7 gap-0.5">
           {cells.map((cell, idx) => {
             const colIdx = idx % 7
             const isToday =
@@ -149,36 +138,24 @@ export function ProjectCalendar({
               <div
                 key={idx}
                 onClick={cell.currentMonth ? (e) => handleDayClick(cell.day, e) : undefined}
-                style={{
-                  minHeight: 64,
-                  padding: '4px 3px',
-                  background: !cell.currentMonth ? '#F8F8F8' : 'transparent',
-                  borderRadius: 4,
-                  position: 'relative',
-                  cursor: cell.currentMonth ? 'pointer' : 'default',
-                }}
+                className={[
+                  'min-h-16 p-[4px_3px] rounded-sm relative',
+                  cell.currentMonth ? 'cursor-pointer' : 'cursor-default bg-surface',
+                ].join(' ')}
               >
                 <div
-                  style={{
-                    fontSize: 12,
-                    color: isToday
-                      ? '#ffffff'
+                  className={[
+                    'text-sm text-center w-5 h-5 leading-5 rounded-full mx-auto mb-0.5',
+                    isToday
+                      ? 'text-white font-bold bg-primary'
                       : !cell.currentMonth
-                      ? '#D0D0D0'
+                      ? 'text-[#D0D0D0]'
                       : colIdx === 0
-                      ? '#EF4444'
+                      ? 'text-danger'
                       : colIdx === 6
-                      ? '#3B5BDB'
-                      : '#1A1A1A',
-                    fontWeight: isToday ? 700 : 400,
-                    textAlign: 'center',
-                    width: 20,
-                    height: 20,
-                    lineHeight: '20px',
-                    borderRadius: '50%',
-                    background: isToday ? '#3B5BDB' : 'transparent',
-                    margin: '0 auto 2px',
-                  }}
+                      ? 'text-primary'
+                      : 'text-text-primary',
+                  ].join(' ')}
                 >
                   {cell.day}
                 </div>
@@ -186,25 +163,14 @@ export function ProjectCalendar({
                   <div
                     key={s.id}
                     onClick={e => handleScheduleClick(s, e)}
-                    style={{
-                      fontSize: 10,
-                      background: '#dcfce7',
-                      color: '#008236',
-                      borderRadius: 3,
-                      padding: '1px 4px',
-                      marginBottom: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                    }}
+                    className="text-[10px] bg-schedule-chip text-schedule-chip-text rounded-[3px] px-1 py-px mb-px overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
                     title={s.title}
                   >
                     {s.title}
                   </div>
                 ))}
                 {daySchedules.length > 2 && (
-                  <div style={{ fontSize: 10, color: '#9E9E9E' }}>
+                  <div className="text-[10px] text-text-tertiary">
                     +{daySchedules.length - 2}
                   </div>
                 )}

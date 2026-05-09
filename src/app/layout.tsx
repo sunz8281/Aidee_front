@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className="h-full">
-      <body className="min-h-full flex flex-col" style={{ background: '#F8F8F8' }}>
+      <body className="min-h-full flex flex-col bg-surface">
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

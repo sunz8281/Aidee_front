@@ -185,8 +185,8 @@ export default function ProjectPage() {
         </div>
 
         {/* Meeting list + Calendar */}
-        <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
-          <div style={{ width: 300, flexShrink: 0 }}>
+        <div className="flex gap-4" style={{ alignItems: 'stretch' }}>
+          <div style={{ width: 300, flexShrink: 0, display: 'flex' }}>
             <MeetingList
               projectId={projectId}
               meetings={project.meetings ?? []}

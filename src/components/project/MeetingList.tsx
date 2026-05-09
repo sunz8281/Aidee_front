@@ -12,20 +12,23 @@ interface MeetingListProps {
 }
 
 export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingListProps) {
+  const firstMeeting = meetings[0]
+
   return (
     <div
       style={{
         background: '#ffffff',
         border: '1px solid #E5E5E5',
         borderRadius: 12,
-        padding: '16px 0',
-        minHeight: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
       }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between"
-        style={{ padding: '0 20px 12px', borderBottom: '1px solid #F0F0F0' }}
+        style={{ padding: '16px 20px 12px', borderBottom: '1px solid #F0F0F0', flexShrink: 0 }}
       >
         <div className="flex items-center gap-2">
           <IconChat width={16} height={16} />
@@ -57,7 +60,7 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
       </div>
 
       {/* List */}
-      <div>
+      <div style={{ flex: 1 }}>
         {meetings.length === 0 && (
           <div
             style={{ padding: '24px 20px', color: '#9E9E9E', fontSize: 13, textAlign: 'center' }}
@@ -92,6 +95,36 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid #F0F0F0', flexShrink: 0 }}>
+        {firstMeeting ? (
+          <Link href={`/projects/${projectId}/meetings/${firstMeeting.id}`}>
+            <div
+              style={{
+                padding: '12px 20px',
+                fontSize: 13,
+                color: '#6B6B6B',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.background = '#F8F9FF'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+              }}
+            >
+              전체보기
+            </div>
+          </Link>
+        ) : (
+          <div style={{ padding: '12px 20px', fontSize: 13, color: '#BDBDBD', textAlign: 'center' }}>
+            전체보기
+          </div>
+        )}
       </div>
     </div>
   )

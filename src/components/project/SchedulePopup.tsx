@@ -46,7 +46,7 @@ export function SchedulePopup({
   const [startVal, setStartVal] = useState(toInputValue(schedule.startTime, schedule.allDay))
   const [endVal, setEndVal] = useState(toInputValue(schedule.endTime, schedule.allDay))
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
-    schedule.sourceMeetingId ?? null,
+    schedule.meetingId ?? null,
   )
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
@@ -57,7 +57,7 @@ export function SchedulePopup({
   const x = Math.min(position.x + 8, window.innerWidth - POPUP_W - 8)
   const y = Math.min(position.y, window.innerHeight - 320)
 
-  const sourceMeeting = meetings.find(m => m.id === schedule.sourceMeetingId)
+  const sourceMeeting = meetings.find(m => m.id === schedule.meetingId)
   const selectedMeeting = meetings.find(m => m.id === selectedMeetingId)
 
   const handleSave = async () => {
@@ -67,7 +67,7 @@ export function SchedulePopup({
       allDay,
       startTime: toIso(startVal, allDay, false),
       endTime: toIso(endVal, allDay, true),
-      sourceMeetingId: selectedMeetingId,
+      meetingId: selectedMeetingId,
     })
     onClose()
   }
@@ -116,9 +116,9 @@ export function SchedulePopup({
             <span style={{ fontSize: 12, fontWeight: 700, color: '#008236' }}>
               {schedule.title}
             </span>
-            {schedule.sourceMeetingId && sourceMeeting && (
+            {schedule.meetingId && sourceMeeting && (
               <Link
-                href={`/projects/${projectId}/meetings/${schedule.sourceMeetingId}`}
+                href={`/projects/${projectId}/meetings/${schedule.meetingId}`}
                 onClick={onClose}
                 className="flex items-center gap-1"
                 style={{ fontSize: 12, color: '#008236', textDecoration: 'none' }}

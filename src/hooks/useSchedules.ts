@@ -28,7 +28,7 @@ export function useCreateSchedule(projectId: string) {
       endTime: string
       allDay: boolean
       sourceType?: Schedule['sourceType']
-      sourceMeetingId?: string
+      meetingId?: string
     }) => {
       const res = await apiClient.post(`/projects/${projectId}/schedules`, data)
       return res.data
@@ -48,7 +48,7 @@ export function useUpdateSchedule(projectId: string) {
       startTime: string
       endTime: string
       allDay: boolean
-      sourceMeetingId?: string | null
+      meetingId?: string | null
     }) => {
       const res = await apiClient.put(`/schedules/${id}`, data)
       return res.data

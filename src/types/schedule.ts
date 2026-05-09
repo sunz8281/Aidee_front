@@ -5,7 +5,7 @@ export interface Schedule {
   endTime: string
   allDay: boolean
   sourceType?: 'ai' | 'user' | 'agent'
-  sourceMeetingId?: string
+  meetingId?: string | null
   createdAt: string
 }
 

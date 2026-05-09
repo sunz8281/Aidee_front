@@ -1,13 +1,12 @@
 import type { SVGProps } from 'react'
 
-export function IconCheck({ style, ...props }: SVGProps<SVGSVGElement>) {
+export function IconCheck(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width={24}
       height={24}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ color: '#3B5BDB', ...style }}
       {...props}
     >
       <polyline

@@ -1,13 +1,12 @@
 import type { SVGProps } from 'react'
 
-export function IconChat({ style, ...props }: SVGProps<SVGSVGElement>) {
+export function IconChat(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width={24}
       height={24}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ color: '#1A1A1A', ...style }}
       {...props}
     >
       <path

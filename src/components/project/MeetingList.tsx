@@ -28,7 +28,7 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
       {/* Header */}
       <div
         className="flex items-center justify-between"
-        style={{ padding: '16px 20px 12px', borderBottom: '1px solid #F0F0F0', flexShrink: 0 }}
+        style={{ padding: '16px 20px 12px', flexShrink: 0 }}
       >
         <div className="flex items-center gap-2">
           <IconChat width={16} height={16} />
@@ -74,7 +74,6 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
               style={{
                 padding: '10px 20px',
                 cursor: 'pointer',
-                borderBottom: '1px solid #F8F8F8',
                 transition: 'background 0.15s',
               }}
               onMouseEnter={e => {
@@ -98,31 +97,33 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid #F0F0F0', flexShrink: 0 }}>
+      <div style={{ flexShrink: 0 }}>
         {firstMeeting ? (
           <Link href={`/projects/${projectId}/meetings/${firstMeeting.id}`}>
             <div
+              className="flex items-center justify-end gap-1"
               style={{
                 padding: '12px 20px',
                 fontSize: 13,
                 color: '#6B6B6B',
-                textAlign: 'center',
                 cursor: 'pointer',
-                transition: 'background 0.15s',
+                transition: 'color 0.15s',
               }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.background = '#F8F9FF'
+                (e.currentTarget as HTMLDivElement).style.color = '#3B5BDB'
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+                (e.currentTarget as HTMLDivElement).style.color = '#6B6B6B'
               }}
             >
               전체보기
+              <span style={{ fontSize: 15 }}>›</span>
             </div>
           </Link>
         ) : (
-          <div style={{ padding: '12px 20px', fontSize: 13, color: '#BDBDBD', textAlign: 'center' }}>
+          <div className="flex items-center justify-end gap-1" style={{ padding: '12px 20px', fontSize: 13, color: '#BDBDBD' }}>
             전체보기
+            <span style={{ fontSize: 15 }}>›</span>
           </div>
         )}
       </div>

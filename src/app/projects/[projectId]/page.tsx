@@ -222,7 +222,7 @@ export default function ProjectPage() {
             <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>메모</span>
           </div>
           {memosData && memosData.items.length > 0 ? (
-            <MemoSection memos={memosData.items} />
+            <MemoSection memos={memosData.items} meetings={project.meetings ?? []} />
           ) : (
             <div style={{ color: '#9E9E9E', fontSize: 13, padding: '8px 0' }}>
               회의 메모가 없습니다.

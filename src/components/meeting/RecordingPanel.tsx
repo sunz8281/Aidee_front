@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { IconMic } from '@/components/icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/constants/queryKeys'
 import { Button } from '@/components/ui/Button'
@@ -212,12 +213,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
             marginBottom: 20,
           }}
         >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="#EF4444">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#EF4444" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <line x1="12" y1="19" x2="12" y2="23" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
-            <line x1="8" y1="23" x2="16" y2="23" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <IconMic width={32} height={32} style={{ color: '#EF4444' }} />
         </div>
         <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
           녹음 중입니다
@@ -268,12 +264,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
             marginBottom: 20,
           }}
         >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="#9E9E9E">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#9E9E9E" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <line x1="12" y1="19" x2="12" y2="23" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" />
-            <line x1="8" y1="23" x2="16" y2="23" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <IconMic width={32} height={32} />
         </div>
         <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
           녹음이 중지되었습니다.
@@ -334,12 +325,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
           marginBottom: 20,
         }}
       >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="#9E9E9E">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#9E9E9E" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <line x1="12" y1="19" x2="12" y2="23" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" />
-          <line x1="8" y1="23" x2="16" y2="23" stroke="#9E9E9E" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <IconMic width={32} height={32} />
       </div>
       <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
         녹음 시작하기

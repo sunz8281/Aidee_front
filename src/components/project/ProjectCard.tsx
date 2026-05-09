@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { ProjectSummary } from '@/types'
+import { IconChat } from '@/components/icons'
 
 interface ProjectCardProps {
   project: ProjectSummary
@@ -45,12 +46,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             marginBottom: 12,
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-              fill="#3B5BDB"
-            />
-          </svg>
+          <IconChat width={20} height={20} className="text-primary" />
         </div>
 
         {/* Name */}
@@ -68,15 +64,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Meta */}
         <div style={{ fontSize: 12, color: '#9E9E9E', lineHeight: '20px' }}>
           <div className="flex items-center gap-1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                stroke="#9E9E9E"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IconChat width={13} height={13} style={{ opacity: 0.5 }} />
             2개 회의
           </div>
           <div>마지막 업데이트: {lastUpdate}</div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { IconCheck, IconEdit, IconTrash, IconMemo } from '@/components/icons'
 import { Header } from '@/components/ui/Header'
 import { AgentButton } from '@/components/ui/AgentButton'
 import { AgentBar } from '@/components/ui/AgentBar'
@@ -98,82 +99,89 @@ export default function ProjectPage() {
         }}
       >
         {/* Title */}
-        <div className="flex items-center gap-3" style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24 }}>
           {isEditingTitle ? (
-            <input
-              autoFocus
-              value={titleDraft}
-              onChange={e => setTitleDraft(e.target.value)}
-              onBlur={handleTitleSave}
-              onKeyDown={handleTitleKeyDown}
+            <div
+              className="flex items-center"
               style={{
-                fontSize: 26,
-                fontWeight: 700,
-                color: '#1A1A1A',
-                border: 'none',
-                borderBottom: '2px solid #3B5BDB',
-                outline: 'none',
-                background: 'transparent',
-                padding: '0 4px',
+                border: '2px solid #3B5BDB',
+                borderRadius: 12,
+                background: '#ffffff',
+                padding: '0 16px',
+                height: 64,
               }}
-            />
+            >
+              <input
+                autoFocus
+                value={titleDraft}
+                onChange={e => setTitleDraft(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                style={{
+                  flex: 1,
+                  fontSize: 26,
+                  fontWeight: 700,
+                  color: '#1A1A1A',
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                }}
+              />
+              <button
+                onClick={handleTitleSave}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#3B5BDB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 4,
+                  flexShrink: 0,
+                }}
+              >
+                <IconCheck width={22} height={22} />
+              </button>
+            </div>
           ) : (
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
-              {project.name}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
+                {project.name}
+              </h1>
+              <button
+                onClick={handleTitleEdit}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#9E9E9E',
+                  padding: 4,
+                  borderRadius: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="프로젝트 이름 수정"
+              >
+                <IconEdit width={16} height={16} style={{ opacity: 0.5 }} />
+              </button>
+              <button
+                onClick={handleDeleteProject}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#9E9E9E',
+                  padding: 4,
+                  borderRadius: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: 'auto',
+                }}
+                title="프로젝트 삭제"
+              >
+                <IconTrash width={16} height={16} style={{ opacity: 0.5 }} />
+              </button>
+            </div>
           )}
-          <button
-            onClick={isEditingTitle ? handleTitleSave : handleTitleEdit}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#9E9E9E',
-              padding: 4,
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            title="프로젝트 이름 수정"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={handleDeleteProject}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#9E9E9E',
-              padding: 4,
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              marginLeft: 'auto',
-            }}
-            title="프로젝트 삭제"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </div>
 
         {/* Meeting list + Calendar */}
@@ -209,10 +217,7 @@ export default function ProjectPage() {
           }}
         >
           <div className="flex items-center gap-2" style={{ marginBottom: memosData?.items.length ? 16 : 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="18" height="18" rx="2" stroke="#F59E0B" strokeWidth="2" />
-              <path d="M8 8h8M8 12h8M8 16h5" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <IconMemo width={16} height={16} />
             <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>메모</span>
           </div>
           {memosData && memosData.items.length > 0 ? (

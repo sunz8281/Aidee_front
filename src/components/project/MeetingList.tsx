@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { MeetingSummary } from '@/types'
+import { IconChat } from '@/components/icons'
 
 interface MeetingListProps {
   projectId: string
@@ -27,12 +28,7 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
         style={{ padding: '0 20px 12px', borderBottom: '1px solid #F0F0F0' }}
       >
         <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-              fill="#3B5BDB"
-            />
-          </svg>
+          <IconChat width={16} height={16} />
           <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>
             최근 회의
           </span>

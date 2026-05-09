@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { IconEdit, IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
 import type { Meeting, Schedule } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
@@ -100,16 +101,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
               display: 'flex',
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              />
-              <path
-                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              />
-            </svg>
+            <IconEdit width={14} height={14} style={{ opacity: 0.5 }} />
           </button>
         </div>
         <span style={{ fontSize: 13, color: '#9E9E9E', flexShrink: 0 }}>{meetingDate}</span>
@@ -126,12 +118,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
           }}
         >
           <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                fill="#3B5BDB"
-              />
-            </svg>
+            <IconChat width={16} height={16} className="text-primary" />
             <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>회의 요약</span>
           </div>
           <p style={{ fontSize: 14, color: '#1A1A1A', lineHeight: '22px', margin: 0 }}>
@@ -155,9 +142,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
           }}
         >
           <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B5BDB">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
+            <IconPlay width={14} height={14} />
             <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>회의 스크립트</span>
           </div>
           {meeting.scripts && meeting.scripts.length > 0 ? (
@@ -202,10 +187,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
             }}
           >
             <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="18" height="18" rx="2" stroke="#F59E0B" strokeWidth="2" />
-                <path d="M8 8h8M8 12h8M8 16h5" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <IconMemo width={14} height={14} />
               <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>회의 메모</span>
             </div>
             <textarea
@@ -239,12 +221,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
           >
             <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
               <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="#10B981" strokeWidth="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="8" y1="2" x2="8" y2="6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="3" y1="10" x2="21" y2="10" stroke="#10B981" strokeWidth="2" />
-                </svg>
+                <IconCalendar width={14} height={14} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>정해진 일정</span>
               </div>
             </div>

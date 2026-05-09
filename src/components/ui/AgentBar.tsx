@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { IconSend } from '@/components/icons'
 import { useAgentStore } from '@/store/agentStore'
 import type { AgentActionPayload } from '@/types'
 
@@ -160,15 +161,7 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
             transition: 'background 0.15s',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M5 12h14M12 5l7 7-7 7"
-              stroke="#ffffff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <IconSend width={16} height={16} />
         </button>
       </div>
     </div>

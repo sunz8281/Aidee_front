@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/ui/Header'
+import { IconChat } from '@/components/icons'
 import { Button } from '@/components/ui/Button'
 import { ProjectCard } from '@/components/project/ProjectCard'
 import { useProjects, useCreateProject } from '@/hooks/useProjects'
@@ -52,21 +53,7 @@ export default function HomePage() {
             className="flex flex-col items-center justify-center"
             style={{ paddingTop: 100, color: '#9E9E9E' }}
           >
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ marginBottom: 16, opacity: 0.4 }}
-            >
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                stroke="#9E9E9E"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IconChat width={48} height={48} className="mb-4 opacity-40" style={{ color: '#9E9E9E' }} />
             <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8 }}>
               프로젝트가 없습니다
             </div>

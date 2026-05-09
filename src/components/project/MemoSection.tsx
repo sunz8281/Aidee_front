@@ -43,10 +43,10 @@ function MemoCard({ memo, meetings }: MemoCardProps) {
           background: '#ffffff',
           border: '1px solid #004fff',
           borderRadius: 10,
-          padding: '20px 15px',
+          padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 20,
+          gap: 10,
           position: 'relative',
         }}
       >
@@ -165,7 +165,7 @@ function MemoCard({ memo, meetings }: MemoCardProps) {
         background: '#FFFDE7',
         border: '1px solid #FFF176',
         borderRadius: 10,
-        padding: '20px 15px',
+        padding: '12px 14px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',

@@ -48,6 +48,7 @@ export function useUpdateSchedule(projectId: string) {
       startTime: string
       endTime: string
       allDay: boolean
+      sourceMeetingId?: string | null
     }) => {
       const res = await apiClient.put(`/schedules/${id}`, data)
       return res.data

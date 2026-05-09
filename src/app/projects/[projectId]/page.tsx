@@ -197,6 +197,7 @@ export default function ProjectPage() {
           <ProjectCalendar
             projectId={projectId}
             schedules={schedulesData?.items ?? []}
+            meetings={project.meetings ?? []}
             year={calYear}
             month={calMonth}
             onMonthChange={(y, m) => {

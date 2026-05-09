@@ -4,17 +4,18 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useUpdateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
 import { IconEdit, IconCheck, IconTrash } from '@/components/icons'
-import type { Schedule } from '@/types'
+import type { Schedule, MeetingSummary } from '@/types'
 
 interface SchedulePopupProps {
   schedule: Schedule
   projectId: string
+  meetings: MeetingSummary[]
   position: { x: number; y: number }
   onClose: () => void
   initialMode?: 'view' | 'edit'
 }
 
-const POPUP_W = 200
+const POPUP_W = 210
 
 function formatDateTime(iso: string, allDay: boolean) {
   if (!iso) return ''
@@ -34,6 +35,7 @@ function toIso(value: string, allDay: boolean, isEnd: boolean) {
 export function SchedulePopup({
   schedule,
   projectId,
+  meetings,
   position,
   onClose,
   initialMode = 'view',
@@ -43,13 +45,20 @@ export function SchedulePopup({
   const [allDay, setAllDay] = useState(schedule.allDay)
   const [startVal, setStartVal] = useState(toInputValue(schedule.startTime, schedule.allDay))
   const [endVal, setEndVal] = useState(toInputValue(schedule.endTime, schedule.allDay))
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
+    schedule.sourceMeetingId ?? null,
+  )
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const update = useUpdateSchedule(projectId)
   const del = useDeleteSchedule()
   const popupRef = useRef<HTMLDivElement>(null)
 
   const x = Math.min(position.x + 8, window.innerWidth - POPUP_W - 8)
-  const y = Math.min(position.y, window.innerHeight - 260)
+  const y = Math.min(position.y, window.innerHeight - 320)
+
+  const sourceMeeting = meetings.find(m => m.id === schedule.sourceMeetingId)
+  const selectedMeeting = meetings.find(m => m.id === selectedMeetingId)
 
   const handleSave = async () => {
     await update.mutateAsync({
@@ -58,6 +67,7 @@ export function SchedulePopup({
       allDay,
       startTime: toIso(startVal, allDay, false),
       endTime: toIso(endVal, allDay, true),
+      sourceMeetingId: selectedMeetingId,
     })
     onClose()
   }
@@ -83,7 +93,7 @@ export function SchedulePopup({
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
-  const commonStyle = {
+  const baseStyle = {
     position: 'fixed' as const,
     left: x,
     top: y,
@@ -100,22 +110,23 @@ export function SchedulePopup({
   /* ── VIEW MODE ── */
   if (mode === 'view') {
     return (
-      <div ref={popupRef} style={{ ...commonStyle, background: '#dcfce7' }}>
-        {/* Header */}
+      <div ref={popupRef} style={{ ...baseStyle, background: '#dcfce7' }}>
         <div className="flex items-start justify-between">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1, marginRight: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#008236' }}>
               {schedule.title}
             </span>
-            {schedule.sourceMeetingId && (
+            {schedule.sourceMeetingId && sourceMeeting && (
               <Link
                 href={`/projects/${projectId}/meetings/${schedule.sourceMeetingId}`}
                 onClick={onClose}
                 className="flex items-center gap-1"
-                style={{ fontSize: 12, color: '#008236' }}
+                style={{ fontSize: 12, color: '#008236', textDecoration: 'none' }}
               >
-                회의 보기
-                <span style={{ fontSize: 11 }}>↗</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {sourceMeeting.title}
+                </span>
+                <span style={{ fontSize: 11, flexShrink: 0 }}>↗</span>
               </Link>
             )}
           </div>
@@ -127,7 +138,6 @@ export function SchedulePopup({
           </button>
         </div>
 
-        {/* Date range */}
         <div style={{ fontSize: 12, color: '#808080', lineHeight: '18px' }}>
           <div>{formatDateTime(schedule.startTime, schedule.allDay)}</div>
           <div>~ {formatDateTime(schedule.endTime, schedule.allDay)}</div>
@@ -140,9 +150,9 @@ export function SchedulePopup({
   return (
     <div
       ref={popupRef}
-      style={{ ...commonStyle, background: '#ffffff', border: '1px solid #004fff' }}
+      style={{ ...baseStyle, background: '#ffffff', border: '1px solid #004fff', overflow: 'visible' }}
     >
-      {/* Header: title input + save */}
+      {/* Title + save */}
       <div className="flex items-center justify-between gap-2">
         <input
           autoFocus
@@ -167,6 +177,88 @@ export function SchedulePopup({
         >
           <IconCheck width={16} height={16} className="text-primary" />
         </button>
+      </div>
+
+      {/* Meeting selector */}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => setDropdownOpen(v => !v)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 4,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              color: selectedMeeting ? '#000000' : '#b0b0b0',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {selectedMeeting?.title ?? '연결된 회의 없음'}
+          </span>
+          <span style={{ fontSize: 10, color: '#808080', flexShrink: 0 }}>▾</span>
+        </button>
+
+        {dropdownOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 4px)',
+              left: 0,
+              width: '100%',
+              background: '#ffffff',
+              border: '1px solid #dedede',
+              borderRadius: 8,
+              zIndex: 1002,
+              overflow: 'hidden',
+              maxHeight: 160,
+              overflowY: 'auto',
+            }}
+          >
+            <div
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => { setSelectedMeetingId(null); setDropdownOpen(false) }}
+              style={{
+                padding: '6px 8px',
+                fontSize: 12,
+                color: '#808080',
+                cursor: 'pointer',
+                background: selectedMeetingId === null ? '#c7d8ff' : '#ffffff',
+              }}
+            >
+              없음
+            </div>
+            {meetings.map(m => (
+              <div
+                key={m.id}
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => { setSelectedMeetingId(m.id); setDropdownOpen(false) }}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: 12,
+                  color: '#000000',
+                  cursor: 'pointer',
+                  background: m.id === selectedMeetingId ? '#c7d8ff' : '#ffffff',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {m.title}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* All-day */}

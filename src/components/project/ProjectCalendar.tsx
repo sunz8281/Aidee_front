@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import type { Schedule } from '@/types'
+import type { Schedule, MeetingSummary } from '@/types'
 import { useCreateSchedule } from '@/hooks/useSchedules'
 import { SchedulePopup } from './SchedulePopup'
 
 interface ProjectCalendarProps {
   projectId: string
   schedules: Schedule[]
+  meetings: MeetingSummary[]
   year: number
   month: number
   onMonthChange: (year: number, month: number) => void
@@ -18,6 +19,7 @@ const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 export function ProjectCalendar({
   projectId,
   schedules,
+  meetings,
   year,
   month,
   onMonthChange,
@@ -216,6 +218,7 @@ export function ProjectCalendar({
         <SchedulePopup
           schedule={popup.schedule}
           projectId={projectId}
+          meetings={meetings}
           position={popup.position}
           onClose={() => setPopup(null)}
           initialMode={popup.initialMode}

@@ -4,7 +4,10 @@ import type { Schedule } from './schedule'
 export interface ProjectSummary {
   id: string
   name: string
+  meetingsCount: number
+  schedulesCount: number
   createdAt: string
+  updatedAt: string
 }
 
 export interface Project {

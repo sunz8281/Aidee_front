@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import type { ProjectSummary } from '@/types'
-import { IconChat } from '@/components/icons'
+import { IconChat, IconCalendar } from '@/components/icons'
 
 interface ProjectCardProps {
   project: ProjectSummary
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const lastUpdate = new Date(project.createdAt).toLocaleDateString('ko-KR', {
+  const lastUpdate = new Date(project.updatedAt).toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -63,9 +63,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Meta */}
         <div style={{ fontSize: 12, color: '#9E9E9E', lineHeight: '20px' }}>
-          <div className="flex items-center gap-1">
-            <IconChat width={13} height={13} style={{ opacity: 0.5 }} />
-            2개 회의
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <IconChat width={13} height={13} style={{ opacity: 0.5 }} />
+              <span>{project.meetingsCount}개 회의</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <IconCalendar width={13} height={13} style={{ opacity: 0.5 }} />
+              <span>{project.schedulesCount}개 일정</span>
+            </div>
           </div>
           <div>마지막 업데이트: {lastUpdate}</div>
         </div>

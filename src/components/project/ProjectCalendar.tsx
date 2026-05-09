@@ -22,7 +22,7 @@ export function ProjectCalendar({
   month,
   onMonthChange,
 }: ProjectCalendarProps) {
-  const [popup, setPopup] = useState<{ schedule: Schedule; position: { x: number; y: number } } | null>(null)
+  const [popup, setPopup] = useState<{ schedule: Schedule; position: { x: number; y: number }; initialMode: 'view' | 'edit' } | null>(null)
 
   const createSchedule = useCreateSchedule(projectId)
 
@@ -75,12 +75,12 @@ export function ProjectCalendar({
       allDay: false,
       createdAt: created.createdAt ?? new Date().toISOString(),
     }
-    setPopup({ schedule: newSchedule, position: { x: e.clientX, y: e.clientY } })
+    setPopup({ schedule: newSchedule, position: { x: e.clientX, y: e.clientY }, initialMode: 'edit' })
   }
 
   const handleScheduleClick = (s: Schedule, e: React.MouseEvent) => {
     e.stopPropagation()
-    setPopup({ schedule: s, position: { x: e.clientX, y: e.clientY } })
+    setPopup({ schedule: s, position: { x: e.clientX, y: e.clientY }, initialMode: 'view' })
   }
 
   return (
@@ -218,6 +218,7 @@ export function ProjectCalendar({
           projectId={projectId}
           position={popup.position}
           onClose={() => setPopup(null)}
+          initialMode={popup.initialMode}
         />
       )}
     </>

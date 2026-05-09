@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useUpdateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
-import { IconCheck, IconTrash } from '@/components/icons'
+import { IconEdit, IconCheck, IconTrash } from '@/components/icons'
 import type { Schedule } from '@/types'
 
 interface SchedulePopupProps {
@@ -10,10 +11,16 @@ interface SchedulePopupProps {
   projectId: string
   position: { x: number; y: number }
   onClose: () => void
+  initialMode?: 'view' | 'edit'
 }
 
-const POPUP_W = 240
-const POPUP_H = 210
+const POPUP_W = 200
+
+function formatDateTime(iso: string, allDay: boolean) {
+  if (!iso) return ''
+  if (allDay) return iso.slice(0, 10)
+  return iso.slice(0, 16).replace('T', ' ')
+}
 
 function toInputValue(iso: string, allDay: boolean) {
   return allDay ? iso.slice(0, 10) : iso.slice(0, 16)
@@ -24,7 +31,14 @@ function toIso(value: string, allDay: boolean, isEnd: boolean) {
   return value.length === 16 ? `${value}:00` : value
 }
 
-export function SchedulePopup({ schedule, projectId, position, onClose }: SchedulePopupProps) {
+export function SchedulePopup({
+  schedule,
+  projectId,
+  position,
+  onClose,
+  initialMode = 'view',
+}: SchedulePopupProps) {
+  const [mode, setMode] = useState<'view' | 'edit'>(initialMode)
   const [title, setTitle] = useState(schedule.title)
   const [allDay, setAllDay] = useState(schedule.allDay)
   const [startVal, setStartVal] = useState(toInputValue(schedule.startTime, schedule.allDay))
@@ -35,7 +49,7 @@ export function SchedulePopup({ schedule, projectId, position, onClose }: Schedu
   const popupRef = useRef<HTMLDivElement>(null)
 
   const x = Math.min(position.x + 8, window.innerWidth - POPUP_W - 8)
-  const y = Math.min(position.y, window.innerHeight - POPUP_H - 8)
+  const y = Math.min(position.y, window.innerHeight - 260)
 
   const handleSave = async () => {
     await update.mutateAsync({
@@ -69,26 +83,66 @@ export function SchedulePopup({ schedule, projectId, position, onClose }: Schedu
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
+  const commonStyle = {
+    position: 'fixed' as const,
+    left: x,
+    top: y,
+    width: POPUP_W,
+    borderRadius: 4,
+    boxShadow: '0px 4px 12px rgba(0,0,0,0.12)',
+    padding: '10px 14px',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 10,
+  }
+
+  /* ── VIEW MODE ── */
+  if (mode === 'view') {
+    return (
+      <div ref={popupRef} style={{ ...commonStyle, background: '#dcfce7' }}>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#008236' }}>
+              {schedule.title}
+            </span>
+            {schedule.sourceMeetingId && (
+              <Link
+                href={`/projects/${projectId}/meetings/${schedule.sourceMeetingId}`}
+                onClick={onClose}
+                className="flex items-center gap-1"
+                style={{ fontSize: 12, color: '#008236' }}
+              >
+                회의 보기
+                <span style={{ fontSize: 11 }}>↗</span>
+              </Link>
+            )}
+          </div>
+          <button
+            onClick={() => setMode('edit')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+          >
+            <IconEdit width={16} height={16} style={{ color: '#008236' }} />
+          </button>
+        </div>
+
+        {/* Date range */}
+        <div style={{ fontSize: 12, color: '#808080', lineHeight: '18px' }}>
+          <div>{formatDateTime(schedule.startTime, schedule.allDay)}</div>
+          <div>~ {formatDateTime(schedule.endTime, schedule.allDay)}</div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── EDIT MODE ── */
   return (
     <div
       ref={popupRef}
-      style={{
-        position: 'fixed',
-        left: x,
-        top: y,
-        width: POPUP_W,
-        background: '#ffffff',
-        border: '1px solid #004fff',
-        borderRadius: 4,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-        padding: '10px 14px',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
+      style={{ ...commonStyle, background: '#ffffff', border: '1px solid #004fff' }}
     >
-      {/* Header: title + save */}
+      {/* Header: title input + save */}
       <div className="flex items-center justify-between gap-2">
         <input
           autoFocus
@@ -150,17 +204,10 @@ export function SchedulePopup({ schedule, projectId, position, onClose }: Schedu
         onClick={handleDelete}
         disabled={del.isPending}
         className="flex items-center gap-1"
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 0,
-          fontSize: 11,
-          alignSelf: 'flex-start',
-        }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, alignSelf: 'flex-start' }}
       >
         <IconTrash width={11} height={11} className="text-danger" />
-        <span className="text-danger">삭제</span>
+        <span style={{ fontSize: 11 }} className="text-danger">삭제</span>
       </button>
     </div>
   )

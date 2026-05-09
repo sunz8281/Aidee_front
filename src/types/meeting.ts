@@ -4,6 +4,7 @@ export interface MeetingSummary {
   id: string
   title: string
   status: 'pending' | 'processing' | 'done' | 'failed'
+  summary: string | null
   meetingAt: string
   createdAt: string
 }

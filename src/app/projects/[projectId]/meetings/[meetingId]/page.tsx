@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Header } from '@/components/ui/Header'
@@ -8,7 +9,8 @@ import { AgentBar } from '@/components/ui/AgentBar'
 import { MeetingSidebar } from '@/components/meeting/MeetingSidebar'
 import { MeetingDetail } from '@/components/meeting/MeetingDetail'
 import { RecordingPanel } from '@/components/meeting/RecordingPanel'
-import { useMeeting, useMeetings } from '@/hooks/useMeetings'
+import { IconEdit, IconCheck } from '@/components/icons'
+import { useMeeting, useMeetings, useUpdateMeeting } from '@/hooks/useMeetings'
 import { useAgentStore } from '@/store/agentStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/constants/queryKeys'
@@ -23,9 +25,34 @@ export default function MeetingPage() {
   const { toggle: toggleAgent } = useAgentStore()
   const qc = useQueryClient()
 
+  const [isEditing, setIsEditing] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [dateDraft, setDateDraft] = useState('')
+  const updateMeeting = useUpdateMeeting(meetingId)
+
   const handleAnalysisDone = () => {
     qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
     qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
+  }
+
+  const handleEditStart = () => {
+    if (!meeting) return
+    setTitleDraft(meeting.title)
+    setDateDraft((meeting.meetingAt ?? meeting.createdAt).slice(0, 10))
+    setIsEditing(true)
+  }
+
+  const handleEditSave = async () => {
+    if (!meeting) return
+    const trimmed = titleDraft.trim()
+    const updates: { title?: string; meetingAt?: string } = {}
+    if (trimmed && trimmed !== meeting.title) updates.title = trimmed
+    if (dateDraft && dateDraft !== (meeting.meetingAt ?? meeting.createdAt).slice(0, 10))
+      updates.meetingAt = `${dateDraft}T00:00:00`
+    if (Object.keys(updates).length > 0) {
+      await updateMeeting.mutateAsync(updates)
+    }
+    setIsEditing(false)
   }
 
   if (meetingLoading) {
@@ -90,11 +117,10 @@ export default function MeetingPage() {
                 className="flex flex-col items-center justify-center"
                 style={{
                   background: '#ffffff',
-                  border: '1px solid #E5E5E5',
-                  borderRadius: 12,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 10,
                   padding: 48,
-                  minHeight: 300,
-                  marginTop: 8,
+                  minHeight: 582,
                 }}
               >
                 <div
@@ -117,25 +143,96 @@ export default function MeetingPage() {
                 </div>
               </div>
             ) : (
-              // Pending - recording panel
-              <>
-                {/* Meeting title header */}
-                <div style={{ marginBottom: 16 }}>
-                  <div className="flex items-center justify-between">
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
-                      {meeting.title}
-                    </h1>
-                    <span style={{ fontSize: 13, color: '#9E9E9E' }}>
+              // Pending - header card + recording panel
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                {/* Header card — same style as done/failed */}
+                {isEditing ? (
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      border: '2px solid #004fff',
+                      borderRadius: 10,
+                      padding: 25,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 16,
+                    }}
+                  >
+                    <input
+                      autoFocus
+                      value={titleDraft}
+                      onChange={e => setTitleDraft(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
+                      style={{
+                        flex: 1,
+                        fontSize: 26,
+                        fontWeight: 700,
+                        color: '#0a0a0a',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                    <input
+                      type="date"
+                      value={dateDraft}
+                      onChange={e => setDateDraft(e.target.value)}
+                      style={{
+                        fontSize: 15,
+                        color: '#4a5565',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <button
+                      onClick={handleEditSave}
+                      disabled={updateMeeting.isPending}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+                    >
+                      <IconCheck width={20} height={20} className="text-primary" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 10,
+                      padding: 25,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <h1 style={{ fontSize: 30, fontWeight: 700, color: '#0a0a0a', margin: 0, letterSpacing: '0.4px' }}>
+                        {meeting.title}
+                      </h1>
+                      <button
+                        onClick={handleEditStart}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+                      >
+                        <IconEdit width={20} height={20} style={{ color: '#9e9e9e' }} />
+                      </button>
+                    </div>
+                    <span style={{ fontSize: 16, color: '#4a5565', letterSpacing: '-0.31px', flexShrink: 0 }}>
                       {(meeting.meetingAt ?? meeting.createdAt).slice(0, 10)}
                     </span>
                   </div>
-                </div>
+                )}
+
                 <RecordingPanel
                   meetingId={meetingId}
                   projectId={projectId}
                   onAnalysisDone={handleAnalysisDone}
                 />
-              </>
+              </div>
             )
           ) : (
             // Done or failed

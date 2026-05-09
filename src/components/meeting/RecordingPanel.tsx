@@ -159,10 +159,10 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
         className="flex flex-col items-center justify-center"
         style={{
           background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          borderRadius: 10,
           padding: 48,
-          minHeight: 300,
+          minHeight: 582,
         }}
       >
         {/* Spinner */}
@@ -195,10 +195,10 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
         className="flex flex-col items-center justify-center"
         style={{
           background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          borderRadius: 10,
           padding: 48,
-          minHeight: 300,
+          minHeight: 582,
         }}
       >
         <div
@@ -246,10 +246,10 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
         className="flex flex-col items-center justify-center"
         style={{
           background: '#ffffff',
-          border: '1px solid #E5E5E5',
-          borderRadius: 12,
+          border: '1px solid #e5e7eb',
+          borderRadius: 10,
           padding: 48,
-          minHeight: 300,
+          minHeight: 582,
         }}
       >
         <div
@@ -307,30 +307,30 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
       className="flex flex-col items-center justify-center"
       style={{
         background: '#ffffff',
-        border: '1px solid #E5E5E5',
-        borderRadius: 12,
+        border: '1px solid #e5e7eb',
+        borderRadius: 10,
         padding: 48,
-        minHeight: 300,
+        minHeight: 582,
       }}
     >
       <div
         style={{
-          width: 72,
-          height: 72,
+          width: 128,
+          height: 128,
           borderRadius: '50%',
-          background: '#F3F4F6',
+          background: '#c7c7c7',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 20,
+          marginBottom: 27,
         }}
       >
-        <IconMic width={32} height={32} />
+        <IconMic width={64} height={64} style={{ color: '#ffffff' }} />
       </div>
-      <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
+      <div style={{ fontSize: 24, fontWeight: 600, color: '#0a0a0a', marginBottom: 12 }}>
         녹음 시작하기
       </div>
-      <div style={{ fontSize: 13, color: '#9E9E9E', marginBottom: 28 }}>
+      <div style={{ fontSize: 16, color: '#4a5565', marginBottom: 28, letterSpacing: '-0.31px' }}>
         녹음을 시작하거나 녹음 파일을 업로드합니다.
       </div>
       <div className="flex flex-col gap-3" style={{ alignItems: 'center' }}>
@@ -338,15 +338,15 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '0 20px',
-            height: 40,
-            borderRadius: 8,
-            border: '1px solid #E5E5E5',
+            gap: 7,
+            padding: '12px 24px',
+            borderRadius: 10,
+            border: '2px solid #004fff',
             cursor: 'pointer',
-            fontSize: 14,
-            color: '#1A1A1A',
+            fontSize: 16,
+            color: '#004fff',
             background: '#ffffff',
+            letterSpacing: '-0.31px',
           }}
         >
           ↑ 녹음 파일 업로드
@@ -357,9 +357,26 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
             style={{ display: 'none' }}
           />
         </label>
-        <Button variant="primary" onClick={handleStartRecording} size="md">
+        <button
+          onClick={handleStartRecording}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 7,
+            padding: '12px 24px',
+            width: 184,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 16,
+            color: '#ffffff',
+            background: '#004fff',
+            letterSpacing: '-0.31px',
+          }}
+        >
           ⏺ 녹음 시작
-        </Button>
+        </button>
       </div>
     </div>
   )

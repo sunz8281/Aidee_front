@@ -21,32 +21,13 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
   }
 
   return (
-    <aside
-      style={{
-        width: 349,
-        flexShrink: 0,
-        background: '#e5e5e8',
-        overflowY: 'auto',
-        padding: '20px 27px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-      }}
-    >
+    <aside className="w-[349px] shrink-0 bg-[#e5e5e8] overflow-y-auto px-[27px] py-5 flex flex-col gap-5">
       {/* Add button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+      <div className="flex justify-start">
         <button
           onClick={handleAdd}
           disabled={createMeeting.isPending}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 22,
-            color: '#4a5565',
-            lineHeight: 1,
-            padding: 0,
-          }}
+          className="bg-transparent border-none cursor-pointer text-xl text-[#4a5565] leading-none p-0 disabled:opacity-50"
           title="새 회의 추가"
         >
           +
@@ -59,44 +40,48 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
         const dateStr = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
 
         return (
-          <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`} style={{ textDecoration: 'none' }}>
+          <Link
+            key={meeting.id}
+            href={`/projects/${projectId}/meetings/${meeting.id}`}
+            className="no-underline"
+          >
             <div
-              style={{
-                background: isActive ? '#004fff' : '#ffffff',
-                borderRadius: 16,
-                padding: '20px 24px',
-                minHeight: 113,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-              }}
+              className={[
+                'rounded-2xl px-6 py-5 h-[130px] flex flex-col justify-between',
+                isActive ? 'bg-[#004fff]' : 'bg-white',
+              ].join(' ')}
             >
-              {/* Top row: title + date */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+              {/* Title + Summary group (top) */}
+              <div>
                 <span
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: isActive ? '#ffffff' : '#0a0a0a',
-                    letterSpacing: '-0.44px',
-                    lineHeight: '1.4',
-                  }}
+                  className={[
+                    'text-[17px] font-bold leading-snug tracking-[-0.38px] truncate block',
+                    isActive ? 'text-white' : 'text-[#0a0a0a]',
+                  ].join(' ')}
                 >
                   {meeting.title}
                 </span>
-                <span
-                  style={{
-                    fontSize: 16,
-                    color: isActive ? '#97beff' : '#a3a3a3',
-                    letterSpacing: '-0.35px',
-                    flexShrink: 0,
-                    paddingTop: 2,
-                  }}
+                <p
+                  className={[
+                    'text-sm mt-1 line-clamp-2 leading-[18px]',
+                    meeting.summary
+                      ? isActive ? 'text-[#d4e4ff]' : 'text-[#364153]'
+                      : isActive ? 'text-[#97beff]' : 'text-[#a3a3a3]',
+                  ].join(' ')}
                 >
-                  {dateStr}
-                </span>
+                  {meeting.summary ?? '빈 회의'}
+                </p>
               </div>
 
+              {/* Date — bottom right */}
+              <span
+                className={[
+                  'text-sm tracking-[-0.25px] text-right',
+                  isActive ? 'text-[#97beff]' : 'text-[#a3a3a3]',
+                ].join(' ')}
+              >
+                {dateStr}
+              </span>
             </div>
           </Link>
         )

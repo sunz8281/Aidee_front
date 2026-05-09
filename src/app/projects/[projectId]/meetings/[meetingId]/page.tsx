@@ -8,8 +8,7 @@ import { AgentBar } from '@/components/ui/AgentBar'
 import { MeetingSidebar } from '@/components/meeting/MeetingSidebar'
 import { MeetingDetail } from '@/components/meeting/MeetingDetail'
 import { RecordingPanel } from '@/components/meeting/RecordingPanel'
-import { useMeeting } from '@/hooks/useMeetings'
-import { useProject } from '@/hooks/useProjects'
+import { useMeeting, useMeetings } from '@/hooks/useMeetings'
 import { useAgentStore } from '@/store/agentStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/constants/queryKeys'
@@ -20,7 +19,7 @@ export default function MeetingPage() {
   const meetingId = params.meetingId as string
 
   const { data: meeting, isLoading: meetingLoading } = useMeeting(meetingId)
-  const { data: project } = useProject(projectId)
+  const { data: meetingsData } = useMeetings(projectId)
   const { toggle: toggleAgent } = useAgentStore()
   const qc = useQueryClient()
 
@@ -51,7 +50,7 @@ export default function MeetingPage() {
     )
   }
 
-  const meetings = project?.meetings ?? []
+  const meetings = meetingsData?.items ?? []
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#F8F8F8' }}>

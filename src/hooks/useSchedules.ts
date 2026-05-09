@@ -39,6 +39,25 @@ export function useCreateSchedule(projectId: string) {
   })
 }
 
+export function useUpdateSchedule(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...data }: {
+      id: string
+      title: string
+      startTime: string
+      endTime: string
+      allDay: boolean
+    }) => {
+      const res = await apiClient.put(`/schedules/${id}`, data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['schedules', projectId] })
+    },
+  })
+}
+
 export function useDeleteSchedule() {
   const qc = useQueryClient()
   return useMutation({

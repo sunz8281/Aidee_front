@@ -11,7 +11,7 @@ import { ProjectCalendar } from '@/components/project/ProjectCalendar'
 import { MemoSection } from '@/components/project/MemoSection'
 import { useProject, useUpdateProjectTitle, useDeleteProject } from '@/hooks/useProjects'
 import { useCreateMeeting } from '@/hooks/useMeetings'
-import { useSchedules, useCreateSchedule } from '@/hooks/useSchedules'
+import { useSchedules } from '@/hooks/useSchedules'
 import { useMemos } from '@/hooks/useMemos'
 import { useAgentStore } from '@/store/agentStore'
 
@@ -33,20 +33,7 @@ export default function ProjectPage() {
   const updateTitle = useUpdateProjectTitle(projectId)
   const deleteProject = useDeleteProject()
   const createMeeting = useCreateMeeting(projectId)
-  const createSchedule = useCreateSchedule(projectId)
   const { toggle: toggleAgent } = useAgentStore()
-
-  const handleDayClick = async (y: number, m: number, d: number) => {
-    const date = new Date(y, m - 1, d)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-    await createSchedule.mutateAsync({
-      title: '새 일정',
-      startTime: `${dateStr}T09:00:00`,
-      endTime: `${dateStr}T10:00:00`,
-      allDay: false,
-    })
-  }
 
   const handleTitleEdit = () => {
     setTitleDraft(project?.name ?? '')
@@ -216,7 +203,6 @@ export default function ProjectPage() {
               setCalYear(y)
               setCalMonth(m)
             }}
-            onDayClick={handleDayClick}
           />
         </div>
 

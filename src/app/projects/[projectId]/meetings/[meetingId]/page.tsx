@@ -122,12 +122,22 @@ export default function MeetingPage() {
               <>
                 {/* Meeting title header */}
                 <div style={{ marginBottom: 16 }}>
-                  <div className="flex items-center justify-between">
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      border: '2px solid #004fff',
+                      borderRadius: 10,
+                      padding: '20px 25px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <h1 style={{ fontSize: 26, fontWeight: 700, color: '#0a0a0a', margin: 0 }}>
                       {meeting.title}
                     </h1>
-                    <span style={{ fontSize: 13, color: '#9E9E9E' }}>
-                      {new Date(meeting.createdAt).toLocaleDateString('ko-KR')}
+                    <span style={{ fontSize: 15, color: '#4a5565' }}>
+                      {(meeting.meetingAt ?? meeting.createdAt).slice(0, 10)}
                     </span>
                   </div>
                 </div>

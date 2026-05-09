@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { IconEdit, IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
+import { IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
 import type { Meeting, Schedule } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
@@ -20,8 +20,10 @@ function formatSeconds(sec: number) {
 }
 
 export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(meeting.title)
+  const [dateDraft, setDateDraft] = useState(
+    (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
+  )
   const [memoDraft, setMemoDraft] = useState(meeting.memo ?? '')
   const [memoSaveTimeout, setMemoSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
 
@@ -34,7 +36,13 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
     if (trimmed && trimmed !== meeting.title) {
       await updateMeeting.mutateAsync({ title: trimmed })
     }
-    setIsEditingTitle(false)
+  }
+
+  const handleDateSave = async (value: string) => {
+    setDateDraft(value)
+    if (value) {
+      await updateMeeting.mutateAsync({ meetingAt: `${value}T00:00:00` })
+    }
   }
 
   const handleMemoChange = (value: string) => {
@@ -51,60 +59,52 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
     updateMemo.mutate(memoDraft)
   }
 
-  const meetingDate = meeting.meetingAt
-    ? new Date(meeting.meetingAt).toLocaleDateString('ko-KR')
-    : new Date(meeting.createdAt).toLocaleDateString('ko-KR')
-
   return (
     <div className="flex flex-col" style={{ gap: 16 }}>
-      {/* Title row */}
-      <div className="flex items-center justify-between" style={{ gap: 12 }}>
-        <div className="flex items-center gap-2" style={{ flex: 1 }}>
-          {isEditingTitle ? (
-            <input
-              autoFocus
-              value={titleDraft}
-              onChange={e => setTitleDraft(e.target.value)}
-              onBlur={handleTitleSave}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleTitleSave()
-                if (e.key === 'Escape') setIsEditingTitle(false)
-              }}
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: '#1A1A1A',
-                border: 'none',
-                borderBottom: '2px solid #3B5BDB',
-                outline: 'none',
-                background: 'transparent',
-                flex: 1,
-              }}
-            />
-          ) : (
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
-              {meeting.title}
-            </h1>
-          )}
-          <button
-            onClick={() => {
-              setTitleDraft(meeting.title)
-              setIsEditingTitle(true)
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#9E9E9E',
-              padding: 4,
-              borderRadius: 4,
-              display: 'flex',
-            }}
-          >
-            <IconEdit width={14} height={14} style={{ opacity: 0.5 }} />
-          </button>
-        </div>
-        <span style={{ fontSize: 13, color: '#9E9E9E', flexShrink: 0 }}>{meetingDate}</span>
+      {/* Title card */}
+      <div
+        style={{
+          background: '#ffffff',
+          border: '2px solid #004fff',
+          borderRadius: 10,
+          padding: '20px 25px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
+        <input
+          value={titleDraft}
+          onChange={e => setTitleDraft(e.target.value)}
+          onBlur={handleTitleSave}
+          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+          style={{
+            flex: 1,
+            fontSize: 26,
+            fontWeight: 700,
+            color: '#0a0a0a',
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            fontFamily: 'inherit',
+          }}
+        />
+        <input
+          type="date"
+          value={dateDraft}
+          onChange={e => handleDateSave(e.target.value)}
+          style={{
+            fontSize: 15,
+            color: '#4a5565',
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            flexShrink: 0,
+          }}
+        />
       </div>
 
       {/* Summary */}

@@ -9,6 +9,7 @@ interface ProjectCalendarProps {
   year: number
   month: number
   onMonthChange: (year: number, month: number) => void
+  onDayClick?: (year: number, month: number, day: number) => void
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -18,6 +19,7 @@ export function ProjectCalendar({
   year,
   month,
   onMonthChange,
+  onDayClick,
 }: ProjectCalendarProps) {
   const [tooltip, setTooltip] = useState<{ scheduleId: string } | null>(null)
 
@@ -146,13 +148,16 @@ export function ProjectCalendar({
           return (
             <div
               key={idx}
+              onClick={() => {
+                if (cell.currentMonth && onDayClick) onDayClick(year, month, cell.day)
+              }}
               style={{
                 minHeight: 64,
                 padding: '4px 3px',
-                background:
-                  !cell.currentMonth ? '#F8F8F8' : 'transparent',
+                background: !cell.currentMonth ? '#F8F8F8' : 'transparent',
                 borderRadius: 4,
                 position: 'relative',
+                cursor: cell.currentMonth ? 'pointer' : 'default',
               }}
             >
               <div
@@ -182,6 +187,7 @@ export function ProjectCalendar({
               {daySchedules.slice(0, 2).map(s => (
                 <div
                   key={s.id}
+                  onClick={e => e.stopPropagation()}
                   style={{
                     fontSize: 10,
                     background: '#D4EDDA',
@@ -192,7 +198,7 @@ export function ProjectCalendar({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    cursor: 'pointer',
+                    cursor: 'default',
                   }}
                   title={s.title}
                 >

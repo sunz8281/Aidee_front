@@ -23,18 +23,18 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
   return (
     <aside
       style={{
-        width: 240,
+        width: 349,
         flexShrink: 0,
-        background: '#F8F8F8',
-        borderLeft: '1px solid #E5E5E5',
+        background: '#e5e5e8',
         overflowY: 'auto',
+        padding: '20px 27px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
       }}
     >
       {/* Add button */}
-      <div
-        className="flex items-center justify-end"
-        style={{ padding: '12px 16px', borderBottom: '1px solid #E5E5E5' }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
         <button
           onClick={handleAdd}
           disabled={createMeeting.isPending}
@@ -42,15 +42,10 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            color: '#3B5BDB',
-            fontSize: 20,
-            fontWeight: 500,
-            width: 28,
-            height: 28,
-            borderRadius: 6,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            fontSize: 22,
+            color: '#4a5565',
+            lineHeight: 1,
+            padding: 0,
           }}
           title="새 회의 추가"
         >
@@ -58,66 +53,54 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
         </button>
       </div>
 
-      {/* Meeting list */}
-      <div>
-        {meetings.map(meeting => {
-          const isActive = meeting.id === activeMeetingId
-          const dateStr = meeting.meetingAt
-            ? new Date(meeting.meetingAt).toLocaleDateString('ko-KR')
-            : new Date(meeting.createdAt).toLocaleDateString('ko-KR')
+      {/* Meeting cards */}
+      {meetings.map(meeting => {
+        const isActive = meeting.id === activeMeetingId
+        const dateStr = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
 
-          return (
-            <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`}>
-              <div
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid #F0F0F0',
-                  background: isActive ? '#3B5BDB' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive)
-                    (e.currentTarget as HTMLDivElement).style.background = '#EEF2FF'
-                }}
-                onMouseLeave={e => {
-                  if (!isActive)
-                    (e.currentTarget as HTMLDivElement).style.background = 'transparent'
-                }}
-              >
-                <div
+        return (
+          <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`} style={{ textDecoration: 'none' }}>
+            <div
+              style={{
+                background: isActive ? '#004fff' : '#ffffff',
+                borderRadius: 16,
+                padding: '20px 24px',
+                minHeight: 113,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              {/* Top row: title + date */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <span
                   style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: isActive ? '#ffffff' : '#1A1A1A',
-                    marginBottom: 2,
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: isActive ? '#ffffff' : '#0a0a0a',
+                    letterSpacing: '-0.44px',
+                    lineHeight: '1.4',
                   }}
                 >
                   {meeting.title}
-                </div>
-                <div style={{ fontSize: 11, color: isActive ? 'rgba(255,255,255,0.7)' : '#9E9E9E' }}>
+                </span>
+                <span
+                  style={{
+                    fontSize: 16,
+                    color: isActive ? '#97beff' : '#a3a3a3',
+                    letterSpacing: '-0.35px',
+                    flexShrink: 0,
+                    paddingTop: 2,
+                  }}
+                >
                   {dateStr}
-                </div>
-                {!isActive && meeting.status === 'done' && (
-                  <p
-                    style={{
-                      fontSize: 11,
-                      color: '#9E9E9E',
-                      marginTop: 4,
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    } as React.CSSProperties}
-                  >
-                    {/* summary preview — shown when available */}
-                  </p>
-                )}
+                </span>
               </div>
-            </Link>
-          )
-        })}
-      </div>
+
+            </div>
+          </Link>
+        )
+      })}
     </aside>
   )
 }

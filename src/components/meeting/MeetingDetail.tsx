@@ -66,16 +66,28 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
 
   const displayDate = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
 
+  const cardStyle = {
+    background: '#ffffff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 10,
+    padding: 25,
+  }
+
+  const sectionHeadingStyle = {
+    fontSize: 18,
+    fontWeight: 600,
+    color: '#0a0a0a',
+  }
+
   return (
-    <div className="flex flex-col" style={{ gap: 16 }}>
-      {/* Title card */}
+    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 24 }}>
+
+      {/* ── Header card ── */}
       {isEditing ? (
         <div
           style={{
-            background: '#ffffff',
+            ...cardStyle,
             border: '2px solid #004fff',
-            borderRadius: 10,
-            padding: '20px 25px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -122,112 +134,81 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-between" style={{ gap: 12 }}>
-          <div className="flex items-center gap-2" style={{ flex: 1 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
+        <div
+          style={{
+            ...cardStyle,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ fontSize: 30, fontWeight: 700, color: '#0a0a0a', margin: 0, letterSpacing: '0.4px' }}>
               {meeting.title}
             </h1>
             <button
               onClick={handleEditStart}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#9E9E9E',
-                padding: 4,
-                borderRadius: 4,
-                display: 'flex',
-              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
             >
-              <IconEdit width={14} height={14} style={{ opacity: 0.5 }} />
+              <IconEdit width={20} height={20} style={{ color: '#9e9e9e' }} />
             </button>
           </div>
-          <span style={{ fontSize: 13, color: '#9E9E9E', flexShrink: 0 }}>{displayDate}</span>
+          <span style={{ fontSize: 16, color: '#4a5565', letterSpacing: '-0.31px', flexShrink: 0 }}>
+            {displayDate}
+          </span>
         </div>
       )}
 
-      {/* Summary */}
+      {/* ── Summary ── */}
       {meeting.summary && (
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #E5E5E5',
-            borderRadius: 12,
-            padding: 20,
-          }}
-        >
-          <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-            <IconChat width={16} height={16} className="text-primary" />
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>회의 요약</span>
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <IconChat width={20} height={20} className="text-primary" />
+            <span style={sectionHeadingStyle}>회의 요약</span>
           </div>
-          <p style={{ fontSize: 14, color: '#1A1A1A', lineHeight: '22px', margin: 0 }}>
+          <p style={{ fontSize: 16, color: '#364153', lineHeight: '26px', margin: 0, letterSpacing: '-0.31px' }}>
             {meeting.summary}
           </p>
         </div>
       )}
 
-      {/* Script + Memo/Schedules */}
-      <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
+      {/* ── Script + Right column ── */}
+      <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start' }}>
+
         {/* Script */}
-        <div
-          style={{
-            flex: 1,
-            background: '#ffffff',
-            border: '1px solid #E5E5E5',
-            borderRadius: 12,
-            padding: 20,
-            minHeight: 300,
-            overflow: 'hidden',
-          }}
-        >
-          <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
-            <IconPlay width={14} height={14} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>회의 스크립트</span>
+        <div style={{ ...cardStyle, flex: 1, minWidth: 0, padding: '25px 25px 1px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+            <IconPlay width={20} height={20} />
+            <span style={{ fontSize: 20, fontWeight: 600, color: '#0a0a0a', letterSpacing: '-0.45px' }}>
+              회의 스크립트
+            </span>
           </div>
           {meeting.scripts && meeting.scripts.length > 0 ? (
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxHeight: 600, overflowY: 'auto', paddingBottom: 24 }}>
               {meeting.scripts.map((seg, i) => (
-                <div
-                  key={i}
-                  className="flex gap-3"
-                  style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #F8F8F8' }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9E9E9E',
-                      minWidth: 36,
-                      flexShrink: 0,
-                      paddingTop: 2,
-                    }}
-                  >
+                <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 14, color: '#e5e5e8', minWidth: 48, flexShrink: 0, letterSpacing: '-0.15px' }}>
                     {formatSeconds(seg.startTime)}
                   </span>
-                  <p style={{ fontSize: 13, color: '#1A1A1A', lineHeight: '20px', margin: 0 }}>
+                  <p style={{ fontSize: 16, color: '#364153', lineHeight: '24px', margin: 0, letterSpacing: '-0.31px' }}>
                     {seg.contents}
                   </p>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ color: '#9E9E9E', fontSize: 13 }}>스크립트가 없습니다.</div>
+            <div style={{ color: '#9E9E9E', fontSize: 14, paddingBottom: 24 }}>스크립트가 없습니다.</div>
           )}
         </div>
 
         {/* Right column */}
-        <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ width: 319, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+
           {/* Memo */}
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid #E5E5E5',
-              borderRadius: 12,
-              padding: 16,
-            }}
-          >
-            <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-              <IconMemo width={14} height={14} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>회의 메모</span>
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <IconMemo width={20} height={20} />
+              <span style={sectionHeadingStyle}>회의 메모</span>
             </div>
             <textarea
               value={memoDraft}
@@ -240,53 +221,55 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
                 border: 'none',
                 outline: 'none',
                 resize: 'vertical',
-                fontSize: 13,
-                color: '#1A1A1A',
-                lineHeight: '20px',
+                fontSize: 16,
+                color: '#364153',
+                lineHeight: '1.6',
                 background: 'transparent',
                 fontFamily: 'inherit',
+                letterSpacing: '-0.35px',
               }}
             />
           </div>
 
           {/* Schedules */}
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid #E5E5E5',
-              borderRadius: 12,
-              padding: 16,
-            }}
-          >
-            <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-              <div className="flex items-center gap-2">
-                <IconCalendar width={14} height={14} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>정해진 일정</span>
+          <div style={{ ...cardStyle, paddingBottom: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <IconCalendar width={20} height={20} />
+                <span style={sectionHeadingStyle}>정해진 일정</span>
               </div>
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#6b7280', display: 'flex', padding: 0 }}
+              >
+                +
+              </button>
             </div>
             {meeting.schedules && meeting.schedules.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 24 }}>
                 {meeting.schedules.map((s: Schedule) => (
                   <div
                     key={s.id}
-                    className="flex items-center justify-between"
                     style={{
-                      background: '#F0FDF4',
-                      borderRadius: 6,
-                      padding: '6px 10px',
+                      background: '#f0fff2',
+                      border: '1px solid #d7f9d0',
+                      borderRadius: 8,
+                      padding: '10px 17px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}
                   >
-                    <span style={{ fontSize: 12, color: '#1A1A1A', fontWeight: 500 }}>
+                    <span style={{ fontSize: 16, color: '#000000', letterSpacing: '-0.35px' }}>
                       {s.title}
                     </span>
-                    <span style={{ fontSize: 11, color: '#9E9E9E' }}>
-                      {new Date(s.startTime).toLocaleDateString('ko-KR')}
+                    <span style={{ fontSize: 12, color: '#909090', letterSpacing: '-0.26px' }}>
+                      {s.startTime.slice(0, 10)}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ color: '#9E9E9E', fontSize: 12 }}>추출된 일정이 없습니다.</div>
+              <div style={{ color: '#9E9E9E', fontSize: 14, paddingBottom: 24 }}>추출된 일정이 없습니다.</div>
             )}
           </div>
         </div>

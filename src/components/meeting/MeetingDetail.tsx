@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
+import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
 import type { Meeting, Schedule } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
@@ -20,6 +20,7 @@ function formatSeconds(sec: number) {
 }
 
 export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
+  const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(meeting.title)
   const [dateDraft, setDateDraft] = useState(
     (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
@@ -31,18 +32,22 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
   const updateMemo = useUpdateMemo(meeting.id)
   const qc = useQueryClient()
 
-  const handleTitleSave = async () => {
-    const trimmed = titleDraft.trim()
-    if (trimmed && trimmed !== meeting.title) {
-      await updateMeeting.mutateAsync({ title: trimmed })
-    }
+  const handleEditStart = () => {
+    setTitleDraft(meeting.title)
+    setDateDraft((meeting.meetingAt ?? meeting.createdAt).slice(0, 10))
+    setIsEditing(true)
   }
 
-  const handleDateSave = async (value: string) => {
-    setDateDraft(value)
-    if (value) {
-      await updateMeeting.mutateAsync({ meetingAt: `${value}T00:00:00` })
+  const handleEditSave = async () => {
+    const trimmed = titleDraft.trim()
+    const updates: { title?: string; meetingAt?: string } = {}
+    if (trimmed && trimmed !== meeting.title) updates.title = trimmed
+    if (dateDraft && dateDraft !== (meeting.meetingAt ?? meeting.createdAt).slice(0, 10))
+      updates.meetingAt = `${dateDraft}T00:00:00`
+    if (Object.keys(updates).length > 0) {
+      await updateMeeting.mutateAsync(updates)
     }
+    setIsEditing(false)
   }
 
   const handleMemoChange = (value: string) => {
@@ -59,53 +64,87 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
     updateMemo.mutate(memoDraft)
   }
 
+  const displayDate = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
+
   return (
     <div className="flex flex-col" style={{ gap: 16 }}>
       {/* Title card */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '2px solid #004fff',
-          borderRadius: 10,
-          padding: '20px 25px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-        }}
-      >
-        <input
-          value={titleDraft}
-          onChange={e => setTitleDraft(e.target.value)}
-          onBlur={handleTitleSave}
-          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+      {isEditing ? (
+        <div
           style={{
-            flex: 1,
-            fontSize: 26,
-            fontWeight: 700,
-            color: '#0a0a0a',
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            fontFamily: 'inherit',
+            background: '#ffffff',
+            border: '2px solid #004fff',
+            borderRadius: 10,
+            padding: '20px 25px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
           }}
-        />
-        <input
-          type="date"
-          value={dateDraft}
-          onChange={e => handleDateSave(e.target.value)}
-          style={{
-            fontSize: 15,
-            color: '#4a5565',
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            flexShrink: 0,
-          }}
-        />
-      </div>
+        >
+          <input
+            autoFocus
+            value={titleDraft}
+            onChange={e => setTitleDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
+            style={{
+              flex: 1,
+              fontSize: 26,
+              fontWeight: 700,
+              color: '#0a0a0a',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontFamily: 'inherit',
+            }}
+          />
+          <input
+            type="date"
+            value={dateDraft}
+            onChange={e => setDateDraft(e.target.value)}
+            style={{
+              fontSize: 15,
+              color: '#4a5565',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              flexShrink: 0,
+            }}
+          />
+          <button
+            onClick={handleEditSave}
+            disabled={updateMeeting.isPending}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+          >
+            <IconCheck width={20} height={20} className="text-primary" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between" style={{ gap: 12 }}>
+          <div className="flex items-center gap-2" style={{ flex: 1 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
+              {meeting.title}
+            </h1>
+            <button
+              onClick={handleEditStart}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#9E9E9E',
+                padding: 4,
+                borderRadius: 4,
+                display: 'flex',
+              }}
+            >
+              <IconEdit width={14} height={14} style={{ opacity: 0.5 }} />
+            </button>
+          </div>
+          <span style={{ fontSize: 13, color: '#9E9E9E', flexShrink: 0 }}>{displayDate}</span>
+        </div>
+      )}
 
       {/* Summary */}
       {meeting.summary && (

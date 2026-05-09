@@ -25,7 +25,6 @@ export function useUpdateMemo(meetingId: string) {
       await apiClient.patch(`/meetings/${meetingId}/memo`, { memo })
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
       qc.invalidateQueries({ queryKey: ['memos'] })
     },
   })

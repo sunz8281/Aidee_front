@@ -16,6 +16,7 @@ export function useSchedules(projectId: string, year: number, month: number) {
       return res.data
     },
     enabled: !!projectId,
+    staleTime: 0,
   })
 }
 

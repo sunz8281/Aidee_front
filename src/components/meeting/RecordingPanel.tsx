@@ -12,6 +12,7 @@ type RecordingState = 'idle' | 'recording' | 'paused' | 'processing'
 interface RecordingPanelProps {
   meetingId: string
   projectId: string
+  failed?: boolean
   onAnalysisDone: () => void
   onProcessingStart?: () => void
   onProgressUpdate?: (msg: string) => void
@@ -48,7 +49,7 @@ function extractStreamingSummary(buffer: string): string | null {
   return result || null
 }
 
-export function RecordingPanel({ meetingId, projectId, onAnalysisDone, onProcessingStart, onProgressUpdate, onSttStart, onScriptUpdate, onSummaryUpdate }: RecordingPanelProps) {
+export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, onProcessingStart, onProgressUpdate, onSttStart, onScriptUpdate, onSummaryUpdate }: RecordingPanelProps) {
   const [state, setState] = useState<RecordingState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
@@ -279,10 +280,17 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone, onProcess
   // Idle state
   return (
     <div className={panelBase}>
+      {failed && (
+        <div className="mb-6 px-4 py-3 bg-danger/10 border border-danger/30 rounded-lg text-sm text-danger text-center">
+          분석 중 오류가 발생했습니다. 파일을 다시 업로드해 주세요.
+        </div>
+      )}
       <div className="w-32 h-32 rounded-full bg-[#c7c7c7] flex items-center justify-center mb-7">
         <IconMic width={64} height={64} className="text-white" />
       </div>
-      <div className="text-[24px] font-semibold text-title mb-3">녹음 시작하기</div>
+      <div className="text-[24px] font-semibold text-title mb-3">
+        {failed ? '다시 업로드하기' : '녹음 시작하기'}
+      </div>
       <div className="text-[16px] text-subtitle tracking-[-0.31px] mb-7">
         녹음을 시작하거나 녹음 파일을 업로드합니다.
       </div>

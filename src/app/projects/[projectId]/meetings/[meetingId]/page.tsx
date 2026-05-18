@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/ui/Header'
@@ -36,6 +36,15 @@ export default function MeetingPage() {
   const [liveSummary, setLiveSummary] = useState<string | undefined>()
   const updateMeeting = useUpdateMeeting(meetingId)
   const deleteMeeting = useDeleteMeeting(projectId)
+
+  // 새로고침 등으로 active SSE 없이 processing 상태인 경우 폴링으로 완료 감지
+  useEffect(() => {
+    if (meeting?.status !== 'processing' || isProcessing) return
+    const id = setInterval(() => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
+    }, 3000)
+    return () => clearInterval(id)
+  }, [meeting?.status, isProcessing, meetingId, qc])
 
   const handleDeleteMeeting = async () => {
     if (!confirm('회의를 삭제하시겠습니까?')) return
@@ -123,14 +132,21 @@ export default function MeetingPage() {
 
           {/* Content depends on status */}
           {isProcessing && !sttStarted ? (
-            // 업로드 중 로딩 화면
+            // 클라이언트 업로드 중 로딩 화면
             <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
               <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
               <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
               <div className="text-base text-text-tertiary">{processingLabel || '잠시만 기다려주세요.'}</div>
             </div>
-          ) : (meeting.status === 'pending' || meeting.status === 'processing') && !isProcessing ? (
-            // Pending - header card + recording panel
+          ) : !isProcessing && meeting.status === 'processing' ? (
+            // 새로고침 후 서버에서 처리 중 - 폴링으로 완료 대기
+            <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
+              <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
+              <div className="text-xl font-semibold text-text-primary mb-2">회의를 분석하고 있습니다</div>
+              <div className="text-base text-text-tertiary">잠시 후 자동으로 업데이트됩니다.</div>
+            </div>
+          ) : !isProcessing && (meeting.status === 'pending' || meeting.status === 'failed') ? (
+            // 대기 중 / 실패 - 헤더 + RecordingPanel
             <div className="flex flex-col gap-6">
               {/* Header card */}
               {isEditing ? (
@@ -178,6 +194,7 @@ export default function MeetingPage() {
               <RecordingPanel
                 meetingId={meetingId}
                 projectId={projectId}
+                failed={meeting.status === 'failed'}
                 onAnalysisDone={handleAnalysisDone}
                 onProcessingStart={() => {
                   setIsProcessing(true)

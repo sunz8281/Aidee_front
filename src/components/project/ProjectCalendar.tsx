@@ -331,10 +331,8 @@ export function ProjectCalendar({
   const resizeRef = useRef<{
     scheduleId: string
     side: 'left' | 'right'
-    startX: number
     originalStart: Date
     originalEnd: Date
-    cellWidth: number
   } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -574,23 +572,34 @@ export function ProjectCalendar({
     const schedule = schedules.find(s => s.id === scheduleId)
     if (!schedule || !containerRef.current) return
 
-    const cellWidth = containerRef.current.getBoundingClientRect().width / 7
     resizeRef.current = {
-      scheduleId, side, startX: e.clientX, cellWidth,
+      scheduleId, side,
       originalStart: new Date(schedule.startTime),
       originalEnd:   new Date(schedule.endTime),
     }
 
+    // Compute how many days the cursor is from the original anchor date.
+    // Uses cell-based (X + Y) positioning so dragging across row boundaries works.
+    const getDayDelta = (clientX: number, clientY: number): number | null => {
+      if (!resizeRef.current) return null
+      const idx = clientToCellIdx(clientX, clientY)
+      if (idx === null) return null
+      const targetDate = toMidnight(cellDate(idx, year, month))
+      const refDate = side === 'left'
+        ? toMidnight(resizeRef.current.originalStart)
+        : toMidnight(resizeRef.current.originalEnd)
+      return Math.round((targetDate.getTime() - refDate.getTime()) / 86400000)
+    }
+
     const onMove = (ev: PointerEvent) => {
-      if (!resizeRef.current) return
-      const dayDelta = Math.round((ev.clientX - resizeRef.current.startX) / resizeRef.current.cellWidth)
-      setResizePreview({ scheduleId, side, dayDelta })
+      const delta = getDayDelta(ev.clientX, ev.clientY)
+      if (delta !== null) setResizePreview({ scheduleId, side, dayDelta: delta })
     }
 
     const onUp = (ev: PointerEvent) => {
       if (!resizeRef.current) return
-      const { side: s, originalStart, originalEnd, cellWidth: cw } = resizeRef.current
-      const dayDelta = Math.round((ev.clientX - resizeRef.current.startX) / cw)
+      const { side: s, originalStart, originalEnd } = resizeRef.current
+      const dayDelta = getDayDelta(ev.clientX, ev.clientY) ?? 0
 
       if (dayDelta !== 0) {
         const sc = schedules.find(x => x.id === scheduleId)
@@ -620,7 +629,7 @@ export function ProjectCalendar({
 
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
-  }, [schedules, updateSchedule])
+  }, [schedules, updateSchedule, clientToCellIdx, year, month])
 
   // ── Render ───────────────────────────────────────────────────────────────
 

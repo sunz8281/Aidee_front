@@ -28,7 +28,19 @@ export default function ProjectPage() {
   const [titleDraft, setTitleDraft] = useState('')
 
   const { data: project, isLoading } = useProject(projectId)
-  const { data: schedulesData } = useSchedules(projectId, calYear, calMonth)
+  const calFrom = (() => {
+    const firstDayOfMonth = new Date(calYear, calMonth - 1, 1)
+    const startOffset = firstDayOfMonth.getDay() // 0=Sun
+    const from = new Date(calYear, calMonth - 1, 1 - startOffset)
+    return `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`
+  })()
+  const calTo = (() => {
+    const firstDayOfMonth = new Date(calYear, calMonth - 1, 1)
+    const startOffset = firstDayOfMonth.getDay()
+    const to = new Date(calYear, calMonth - 1, 1 - startOffset + 41)
+    return `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`
+  })()
+  const { data: schedulesData } = useSchedules(projectId, calFrom, calTo)
   const { data: memosData } = useMemos(projectId)
   const updateTitle = useUpdateProjectTitle(projectId)
   const deleteProject = useDeleteProject()

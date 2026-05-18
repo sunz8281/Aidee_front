@@ -5,13 +5,13 @@ import { apiClient } from '@/lib/axios'
 import { QUERY_KEYS } from '@/constants/queryKeys'
 import type { SchedulesResponse, Schedule } from '@/types'
 
-export function useSchedules(projectId: string, year: number, month: number) {
+export function useSchedules(projectId: string, from: string, to: string) {
   return useQuery({
-    queryKey: QUERY_KEYS.schedules(projectId, year, month),
+    queryKey: QUERY_KEYS.schedules(projectId, from, to),
     queryFn: async () => {
       const res = await apiClient.get<SchedulesResponse>(
         `/projects/${projectId}/schedules`,
-        { params: { year, month } },
+        { params: { from, to } },
       )
       return res.data
     },

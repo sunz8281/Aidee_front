@@ -2,21 +2,22 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/ui/Header'
 import { AgentButton } from '@/components/ui/AgentButton'
 import { AgentBar } from '@/components/ui/AgentBar'
 import { MeetingSidebar } from '@/components/meeting/MeetingSidebar'
 import { MeetingDetail } from '@/components/meeting/MeetingDetail'
 import { RecordingPanel } from '@/components/meeting/RecordingPanel'
-import { IconEdit, IconCheck } from '@/components/icons'
-import { useMeeting, useMeetings, useUpdateMeeting } from '@/hooks/useMeetings'
+import { IconEdit, IconCheck, IconTrash } from '@/components/icons'
+import { useMeeting, useMeetings, useUpdateMeeting, useDeleteMeeting } from '@/hooks/useMeetings'
 import { useAgentStore } from '@/store/agentStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/constants/queryKeys'
 
 export default function MeetingPage() {
   const params = useParams()
+  const router = useRouter()
   const projectId = params.projectId as string
   const meetingId = params.meetingId as string
 
@@ -34,6 +35,13 @@ export default function MeetingPage() {
   const [liveScripts, setLiveScripts] = useState<{ startTime: number; contents: string }[] | undefined>()
   const [liveSummary, setLiveSummary] = useState<string | undefined>()
   const updateMeeting = useUpdateMeeting(meetingId)
+  const deleteMeeting = useDeleteMeeting(projectId)
+
+  const handleDeleteMeeting = async () => {
+    if (!confirm('회의를 삭제하시겠습니까?')) return
+    await deleteMeeting.mutateAsync(meetingId)
+    router.push(`/projects/${projectId}`)
+  }
 
   const handleAnalysisDone = () => {
     qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
@@ -96,12 +104,22 @@ export default function MeetingPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
         <main className="flex-1 px-8 pt-6 pb-20 overflow-y-auto">
-          {/* Back link */}
-          <Link href={`/projects/${projectId}`}>
-            <span className="text-base text-text-secondary cursor-pointer inline-flex items-center gap-1 mb-4">
-              ‹ 프로젝트로 돌아가기
-            </span>
-          </Link>
+          {/* Back link + delete */}
+          <div className="flex items-center justify-between mb-4">
+            <Link href={`/projects/${projectId}`}>
+              <span className="text-base text-text-secondary cursor-pointer inline-flex items-center gap-1">
+                ‹ 프로젝트로 돌아가기
+              </span>
+            </Link>
+            <button
+              onClick={handleDeleteMeeting}
+              disabled={deleteMeeting.isPending}
+              className="flex items-center gap-1.5 text-sm text-danger bg-transparent border-none cursor-pointer p-0 disabled:opacity-40"
+            >
+              <IconTrash width={14} height={14} />
+              회의 삭제
+            </button>
+          </div>
 
           {/* Content depends on status */}
           {isProcessing && !sttStarted ? (

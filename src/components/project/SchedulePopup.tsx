@@ -47,6 +47,8 @@ export function SchedulePopup({
   const [endVal, setEndVal] = useState(toInputValue(schedule.endTime, schedule.allDay))
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(schedule.meetingId ?? null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const prevStartRef = useRef(startVal)
+  const prevEndRef = useRef(endVal)
 
   const update = useUpdateSchedule(projectId)
   const del = useDeleteSchedule()
@@ -76,9 +78,19 @@ export function SchedulePopup({
   }
 
   const handleAllDayChange = (checked: boolean) => {
-    setAllDay(checked)
-    setStartVal(startVal.slice(0, 10))
-    setEndVal(endVal.slice(0, 10))
+    if (checked) {
+      prevStartRef.current = startVal
+      prevEndRef.current = endVal
+      setAllDay(true)
+      setStartVal(startVal.slice(0, 10))
+      setEndVal(endVal.slice(0, 10))
+    } else {
+      setAllDay(false)
+      const startTime = prevStartRef.current.length > 10 ? prevStartRef.current.slice(11, 16) : '00:00'
+      const endTime = prevEndRef.current.length > 10 ? prevEndRef.current.slice(11, 16) : '23:59'
+      setStartVal(`${startVal}T${startTime}`)
+      setEndVal(`${endVal}T${endTime}`)
+    }
   }
 
   useEffect(() => {
@@ -211,7 +223,11 @@ export function SchedulePopup({
         <input
           type={allDay ? 'date' : 'datetime-local'}
           value={startVal}
-          onChange={e => setStartVal(e.target.value)}
+          onChange={e => {
+            const newStart = e.target.value
+            setStartVal(newStart)
+            if (newStart && endVal && newStart > endVal) setEndVal(newStart)
+          }}
           className="text-xs text-[#808080] border-none outline-none bg-transparent p-0 w-full"
         />
         <span className="text-xs text-[#c0c0c0]">~</span>

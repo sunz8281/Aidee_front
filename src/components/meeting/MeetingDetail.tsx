@@ -6,7 +6,7 @@ import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar, IconTr
 import type { Meeting, Schedule, MeetingSummary } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
-import { useDeleteSchedule } from '@/hooks/useSchedules'
+import { useCreateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
 import { QUERY_KEYS } from '@/constants/queryKeys'
 import { SchedulePopup } from '@/components/project/SchedulePopup'
 
@@ -53,6 +53,7 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
 
   const updateMeeting = useUpdateMeeting(meeting.id)
   const updateMemo = useUpdateMemo(meeting.id)
+  const createSchedule = useCreateSchedule(projectId)
   const deleteSchedule = useDeleteSchedule()
   const qc = useQueryClient()
   const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(null)
@@ -88,6 +89,24 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
   const handleMemoBlur = () => {
     if (memoSaveTimeout) clearTimeout(memoSaveTimeout)
     updateMemo.mutate(memoDraft)
+  }
+
+  const handleAddSchedule = async (e: React.MouseEvent) => {
+    const date = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
+    const created = await createSchedule.mutateAsync({
+      title: '새 일정',
+      startTime: `${date}T09:00:00`,
+      endTime: `${date}T10:00:00`,
+      allDay: false,
+      meetingId: meeting.id,
+    })
+    const newSchedule: Schedule = {
+      ...created,
+      allDay: false,
+      meetingId: meeting.id,
+      createdAt: created.createdAt ?? new Date().toISOString(),
+    }
+    setEditSchedule({ schedule: newSchedule, x: e.clientX, y: e.clientY })
   }
 
   const displayDate = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
@@ -209,7 +228,11 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
                 <IconCalendar width={20} height={20} />
                 <span className={sectionHeading}>정해진 일정</span>
               </div>
-              <button className="bg-transparent border-none cursor-pointer text-[20px] text-[#6b7280] flex p-0">
+              <button
+                onClick={handleAddSchedule}
+                disabled={createSchedule.isPending}
+                className="bg-transparent border-none cursor-pointer text-[20px] text-[#6b7280] flex p-0 disabled:opacity-40"
+              >
                 +
               </button>
             </div>

@@ -38,11 +38,33 @@ export default function MeetingPage() {
   const updateMeeting = useUpdateMeeting(meetingId)
   const deleteMeeting = useDeleteMeeting(projectId)
 
-  // 새로고침 등으로 active SSE 없이 processing 상태인 경우 status/stream SSE로 완료 감지
+  // 새로고침 등으로 active SSE 없이 processing 상태인 경우 status/stream SSE 연결
+  // stt 이벤트부터는 sttStarted를 true로 바꿔 MeetingDetail 라이브뷰로 전환
   useEffect(() => {
     if (meeting?.status !== 'processing' || isProcessing) return
 
     const ctrl = new AbortController()
+    let sttBuf = ''
+    const scripts: { startTime: number; contents: string }[] = []
+    let analysisBuf = ''
+
+    function extractSummary(buf: string): string | null {
+      const cleaned = buf.replace(/^```json\s*/, '').replace(/```\s*$/, '')
+      const idx = cleaned.indexOf('"summary":')
+      if (idx === -1) return null
+      const after = cleaned.slice(idx + '"summary":'.length).trimStart()
+      if (!after.startsWith('"')) return null
+      let result = '', i = 1
+      while (i < after.length) {
+        if (after[i] === '\\' && i + 1 < after.length) {
+          const ch = after[i + 1]
+          result += ch === '"' ? '"' : ch === 'n' ? '\n' : ch
+          i += 2
+        } else if (after[i] === '"') break
+        else { result += after[i]; i++ }
+      }
+      return result || null
+    }
 
     fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_URL}/meetings/${meetingId}/status/stream`,
@@ -50,9 +72,39 @@ export default function MeetingPage() {
         signal: ctrl.signal,
         onmessage(ev) {
           try {
-            const data = JSON.parse(ev.data) as { status?: string }
-            const status = ev.event || data.status
-            if (status === 'done' || status === 'failed') {
+            const data = JSON.parse(ev.data) as { message?: string; status?: string }
+
+            if (ev.event === 'stt') {
+              sttBuf += data.message ?? ''
+              const lines = sttBuf.split('\n')
+              sttBuf = lines[lines.length - 1]
+              for (let i = 0; i < lines.length - 1; i++) {
+                const line = lines[i].trim()
+                if (!line) continue
+                try {
+                  const seg = JSON.parse(line) as { startTime: number; text: string }
+                  scripts.push({ startTime: seg.startTime, contents: seg.text })
+                  setLiveScripts([...scripts])
+                } catch {}
+              }
+            } else if (ev.event === 'stt_done') {
+              if (sttBuf.trim()) {
+                try {
+                  const seg = JSON.parse(sttBuf.trim()) as { startTime: number; text: string }
+                  scripts.push({ startTime: seg.startTime, contents: seg.text })
+                  setLiveScripts([...scripts])
+                } catch {}
+              }
+              sttBuf = ''
+              setSttStarted(true)
+            } else if (ev.event === 'analyzing') {
+              analysisBuf += data.message ?? ''
+              const summary = extractSummary(analysisBuf)
+              if (summary) setLiveSummary(summary)
+            } else if (ev.event === 'done' || data.status === 'done') {
+              handleAnalysisDone()
+              ctrl.abort()
+            } else if (ev.event === 'failed' || data.status === 'failed') {
               qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
               qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
               ctrl.abort()
@@ -161,8 +213,8 @@ export default function MeetingPage() {
               <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
               <div className="text-base text-text-tertiary">{processingLabel || '잠시만 기다려주세요.'}</div>
             </div>
-          ) : !isProcessing && meeting.status === 'processing' ? (
-            // 새로고침 후 서버에서 처리 중 - 폴링으로 완료 대기
+          ) : !isProcessing && meeting.status === 'processing' && !sttStarted ? (
+            // 새로고침 후 스크립트 도착 전 - 스피너
             <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
               <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
               <div className="text-xl font-semibold text-text-primary mb-2">회의를 분석하고 있습니다</div>

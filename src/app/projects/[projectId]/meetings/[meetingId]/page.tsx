@@ -22,17 +22,27 @@ export default function MeetingPage() {
 
   const { data: meeting, isLoading: meetingLoading } = useMeeting(meetingId)
   const { data: meetingsData } = useMeetings(projectId)
-  const { toggle: toggleAgent } = useAgentStore()
+  const { isOpen: agentOpen, toggle: toggleAgent } = useAgentStore()
   const qc = useQueryClient()
 
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [dateDraft, setDateDraft] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [sttStarted, setSttStarted] = useState(false)
+  const [processingLabel, setProcessingLabel] = useState('')
+  const [liveScripts, setLiveScripts] = useState<{ startTime: number; contents: string }[] | undefined>()
+  const [liveSummary, setLiveSummary] = useState<string | undefined>()
   const updateMeeting = useUpdateMeeting(meetingId)
 
   const handleAnalysisDone = () => {
     qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
     qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
+    setIsProcessing(false)
+    setSttStarted(false)
+    setProcessingLabel('')
+    setLiveScripts(undefined)
+    setLiveSummary(undefined)
   }
 
   const handleEditStart = () => {
@@ -94,69 +104,83 @@ export default function MeetingPage() {
           </Link>
 
           {/* Content depends on status */}
-          {meeting.status === 'pending' || meeting.status === 'processing' ? (
-            meeting.status === 'processing' ? (
-              // Processing - spinner
-              <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
-                <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
-                <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
-                <div className="text-base text-text-tertiary">잠시만 기다려주세요. 곧 회의 기록이 생성됩니다.</div>
-              </div>
-            ) : (
-              // Pending - header card + recording panel
-              <div className="flex flex-col gap-6">
-                {/* Header card */}
-                {isEditing ? (
-                  <div className="bg-card border-2 border-primary rounded-[10px] p-[25px] flex items-center justify-between gap-4">
-                    <input
-                      autoFocus
-                      value={titleDraft}
-                      onChange={e => setTitleDraft(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
-                      className="flex-1 text-[26px] font-bold text-title border-none outline-none bg-transparent font-[inherit]"
-                    />
-                    <input
-                      type="date"
-                      value={dateDraft}
-                      onChange={e => setDateDraft(e.target.value)}
-                      className="text-lg text-subtitle border-none outline-none bg-transparent cursor-pointer font-[inherit] shrink-0"
-                    />
+          {isProcessing && !sttStarted ? (
+            // 업로드 중 로딩 화면
+            <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
+              <div className="w-12 h-12 rounded-full border-[3px] border-border border-t-primary animate-spin mb-5" />
+              <div className="text-xl font-semibold text-text-primary mb-2">파일을 처리하고 있습니다</div>
+              <div className="text-base text-text-tertiary">{processingLabel || '잠시만 기다려주세요.'}</div>
+            </div>
+          ) : (meeting.status === 'pending' || meeting.status === 'processing') && !isProcessing ? (
+            // Pending - header card + recording panel
+            <div className="flex flex-col gap-6">
+              {/* Header card */}
+              {isEditing ? (
+                <div className="bg-card border-2 border-primary rounded-[10px] p-[25px] flex items-center justify-between gap-4">
+                  <input
+                    autoFocus
+                    value={titleDraft}
+                    onChange={e => setTitleDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleEditSave() }}
+                    className="flex-1 text-[26px] font-bold text-title border-none outline-none bg-transparent font-[inherit]"
+                  />
+                  <input
+                    type="date"
+                    value={dateDraft}
+                    onChange={e => setDateDraft(e.target.value)}
+                    className="text-lg text-subtitle border-none outline-none bg-transparent cursor-pointer font-[inherit] shrink-0"
+                  />
+                  <button
+                    onClick={handleEditSave}
+                    disabled={updateMeeting.isPending}
+                    className="bg-transparent border-none cursor-pointer p-0 shrink-0"
+                  >
+                    <IconCheck width={20} height={20} className="text-primary" />
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-card border border-card-border rounded-[10px] p-[25px] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-[30px] font-bold text-title m-0 tracking-[0.4px]">
+                      {meeting.title}
+                    </h1>
                     <button
-                      onClick={handleEditSave}
-                      disabled={updateMeeting.isPending}
-                      className="bg-transparent border-none cursor-pointer p-0 shrink-0"
+                      onClick={handleEditStart}
+                      className="bg-transparent border-none cursor-pointer p-0 flex"
                     >
-                      <IconCheck width={20} height={20} className="text-primary" />
+                      <IconEdit width={20} height={20} className="text-text-tertiary" />
                     </button>
                   </div>
-                ) : (
-                  <div className="bg-card border border-card-border rounded-[10px] p-[25px] flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-[30px] font-bold text-title m-0 tracking-[0.4px]">
-                        {meeting.title}
-                      </h1>
-                      <button
-                        onClick={handleEditStart}
-                        className="bg-transparent border-none cursor-pointer p-0 flex"
-                      >
-                        <IconEdit width={20} height={20} className="text-text-tertiary" />
-                      </button>
-                    </div>
-                    <span className="text-[16px] text-subtitle tracking-[-0.31px] shrink-0">
-                      {(meeting.meetingAt ?? meeting.createdAt).slice(0, 10)}
-                    </span>
-                  </div>
-                )}
+                  <span className="text-[16px] text-subtitle tracking-[-0.31px] shrink-0">
+                    {(meeting.meetingAt ?? meeting.createdAt).slice(0, 10)}
+                  </span>
+                </div>
+              )}
 
-                <RecordingPanel
-                  meetingId={meetingId}
-                  projectId={projectId}
-                  onAnalysisDone={handleAnalysisDone}
-                />
-              </div>
-            )
+              <RecordingPanel
+                meetingId={meetingId}
+                projectId={projectId}
+                onAnalysisDone={handleAnalysisDone}
+                onProcessingStart={() => {
+                  setIsProcessing(true)
+                  setSttStarted(false)
+                  setLiveScripts([])
+                  setLiveSummary('')
+                }}
+                onProgressUpdate={setProcessingLabel}
+                onSttStart={() => setSttStarted(true)}
+                onScriptUpdate={setLiveScripts}
+                onSummaryUpdate={setLiveSummary}
+              />
+            </div>
           ) : (
-            <MeetingDetail meeting={meeting} projectId={projectId} />
+            <MeetingDetail
+              meeting={meeting}
+              projectId={projectId}
+              meetings={meetings}
+              liveScripts={liveScripts}
+              liveSummary={liveSummary}
+            />
           )}
         </main>
 
@@ -168,7 +192,7 @@ export default function MeetingPage() {
         />
       </div>
 
-      <AgentButton onClick={toggleAgent} />
+      {!agentOpen && <AgentButton onClick={toggleAgent} />}
       <AgentBar projectId={projectId} meetingId={meetingId} />
     </div>
   )

@@ -13,11 +13,42 @@ interface RecordingPanelProps {
   meetingId: string
   projectId: string
   onAnalysisDone: () => void
+  onProcessingStart?: () => void
+  onProgressUpdate?: (msg: string) => void
+  onSttStart?: () => void
+  onScriptUpdate?: (scripts: { startTime: number; contents: string }[]) => void
+  onSummaryUpdate?: (summary: string) => void
 }
 
 const panelBase = 'flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]'
 
-export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: RecordingPanelProps) {
+function extractStreamingSummary(buffer: string): string | null {
+  const cleaned = buffer.replace(/^```json\s*/, '').replace(/```\s*$/, '')
+  const idx = cleaned.indexOf('"summary":')
+  if (idx === -1) return null
+  const afterKey = cleaned.slice(idx + '"summary":'.length).trimStart()
+  if (!afterKey.startsWith('"')) return null
+  const valueStr = afterKey.slice(1)
+  let result = ''
+  let i = 0
+  while (i < valueStr.length) {
+    if (valueStr[i] === '\\' && i + 1 < valueStr.length) {
+      const ch = valueStr[i + 1]
+      if (ch === '"') result += '"'
+      else if (ch === 'n') result += '\n'
+      else result += ch
+      i += 2
+    } else if (valueStr[i] === '"') {
+      break
+    } else {
+      result += valueStr[i]
+      i++
+    }
+  }
+  return result || null
+}
+
+export function RecordingPanel({ meetingId, projectId, onAnalysisDone, onProcessingStart, onProgressUpdate, onSttStart, onScriptUpdate, onSummaryUpdate }: RecordingPanelProps) {
   const [state, setState] = useState<RecordingState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
@@ -26,6 +57,9 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const sttBufferRef = useRef('')
+  const liveScriptsRef = useRef<{ startTime: number; contents: string }[]>([])
+  const analysisBufferRef = useRef('')
 
   const qc = useQueryClient()
 
@@ -113,7 +147,11 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
 
   const uploadAndAnalyze = async (audioBlob: Blob | File) => {
     setState('processing')
-    setProgressLabel('파일을 처리하고 있습니다')
+    onProcessingStart?.()
+    setProgressLabel('녹음 파일을 업로드하는 중입니다')
+    sttBufferRef.current = ''
+    liveScriptsRef.current = []
+    analysisBufferRef.current = ''
 
     const formData = new FormData()
     formData.append('audioFile', audioBlob, 'recording.webm')
@@ -125,20 +163,45 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
           method: 'POST',
           body: formData,
           onmessage(ev) {
-            if (ev.event === 'stt_progress') {
-              const { progress } = JSON.parse(ev.data) as { progress: number }
-              setProgressLabel(`음성 변환 중... ${progress}%`)
-            } else if (ev.event === 'stt_done') {
-              setProgressLabel('AI 분석 중...')
-            } else if (ev.event === 'ai_progress') {
-              const { step } = JSON.parse(ev.data) as { step: string }
-              setProgressLabel(step)
-            } else if (ev.event === 'done') {
-              qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
-              qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
-              onAnalysisDone()
-            }
-          },
+              const data = JSON.parse(ev.data) as { message: string }
+
+              if (ev.event === 'upload') {
+                setProgressLabel(data.message)
+                onProgressUpdate?.(data.message)
+              } else if (ev.event === 'stt') {
+                onSttStart?.()
+                sttBufferRef.current += data.message
+                const lines = sttBufferRef.current.split('\n')
+                sttBufferRef.current = lines[lines.length - 1]
+                for (let i = 0; i < lines.length - 1; i++) {
+                  const line = lines[i].trim()
+                  if (!line) continue
+                  try {
+                    const seg = JSON.parse(line) as { startTime: number; text: string }
+                    liveScriptsRef.current.push({ startTime: seg.startTime, contents: seg.text })
+                    onScriptUpdate?.([...liveScriptsRef.current])
+                  } catch {}
+                }
+              } else if (ev.event === 'stt_done') {
+                if (sttBufferRef.current.trim()) {
+                  try {
+                    const seg = JSON.parse(sttBufferRef.current.trim()) as { startTime: number; text: string }
+                    liveScriptsRef.current.push({ startTime: seg.startTime, contents: seg.text })
+                    onScriptUpdate?.([...liveScriptsRef.current])
+                  } catch {}
+                }
+                sttBufferRef.current = ''
+                setProgressLabel(data.message)
+              } else if (ev.event === 'analyzing') {
+                analysisBufferRef.current += data.message
+                const summary = extractStreamingSummary(analysisBufferRef.current)
+                if (summary) onSummaryUpdate?.(summary)
+              } else if (ev.event === 'done') {
+                qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
+                qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
+                onAnalysisDone()
+              }
+            },
           onerror(err) {
             setState('idle')
             throw err
@@ -223,8 +286,8 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
       <div className="text-[16px] text-subtitle tracking-[-0.31px] mb-7">
         녹음을 시작하거나 녹음 파일을 업로드합니다.
       </div>
-      <div className="flex flex-col gap-3 items-center">
-        <label className="inline-flex items-center gap-[7px] px-6 py-3 rounded-[10px] border-2 border-primary cursor-pointer text-[16px] text-primary tracking-[-0.31px]">
+      <div className="flex flex-col gap-3 w-[220px]">
+        <label className="flex items-center justify-center gap-[7px] w-full px-6 py-3 rounded-[10px] border-2 border-primary cursor-pointer text-[16px] text-primary tracking-[-0.31px]">
           ↑ 녹음 파일 업로드
           <input
             type="file"
@@ -235,7 +298,7 @@ export function RecordingPanel({ meetingId, projectId, onAnalysisDone }: Recordi
         </label>
         <button
           onClick={handleStartRecording}
-          className="inline-flex items-center justify-center gap-[7px] px-6 py-3 w-[184px] rounded-[10px] border-none cursor-pointer text-[16px] text-white bg-primary tracking-[-0.31px]"
+          className="flex items-center justify-center gap-[7px] w-full px-6 py-3 rounded-[10px] border-none cursor-pointer text-[16px] text-white bg-primary tracking-[-0.31px]"
         >
           ⏺ 녹음 시작
         </button>

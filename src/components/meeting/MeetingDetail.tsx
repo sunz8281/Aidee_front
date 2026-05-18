@@ -2,15 +2,38 @@
 
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
-import type { Meeting, Schedule } from '@/types'
+import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar, IconTrash } from '@/components/icons'
+import type { Meeting, Schedule, MeetingSummary } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
+import { useDeleteSchedule } from '@/hooks/useSchedules'
 import { QUERY_KEYS } from '@/constants/queryKeys'
+import { SchedulePopup } from '@/components/project/SchedulePopup'
 
 interface MeetingDetailProps {
   meeting: Meeting
   projectId: string
+  meetings: MeetingSummary[]
+  liveScripts?: { startTime: number; contents: string }[]
+  liveSummary?: string
+}
+
+function formatScheduleDate(s: Schedule): string {
+  const startDate = s.startTime.slice(0, 10)
+  const endDate = s.endTime.slice(0, 10)
+  const sameDay = startDate === endDate
+
+  if (s.allDay) {
+    return sameDay ? startDate : `${startDate}\n~ ${endDate}`
+  }
+
+  const startDateTime = s.startTime.slice(0, 16).replace('T', ' ')
+  const endTime = s.endTime.slice(11, 16)
+  const endDateTime = s.endTime.slice(0, 16).replace('T', ' ')
+
+  return sameDay
+    ? `${startDateTime}\n~ ${endTime}`
+    : `${startDateTime}\n~ ${endDateTime}`
 }
 
 function formatSeconds(sec: number) {
@@ -19,7 +42,7 @@ function formatSeconds(sec: number) {
   return `${m}:${s}`
 }
 
-export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
+export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveSummary }: MeetingDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(meeting.title)
   const [dateDraft, setDateDraft] = useState(
@@ -30,7 +53,10 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
 
   const updateMeeting = useUpdateMeeting(meeting.id)
   const updateMemo = useUpdateMemo(meeting.id)
+  const deleteSchedule = useDeleteSchedule()
   const qc = useQueryClient()
+  const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(null)
+  const [editSchedule, setEditSchedule] = useState<{ schedule: Schedule; x: number; y: number } | null>(null)
 
   const handleEditStart = () => {
     setTitleDraft(meeting.title)
@@ -70,6 +96,7 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
   const sectionHeading = 'text-xl font-semibold text-title'
 
   return (
+    <>
     <div className="flex flex-col gap-6">
 
       {/* ── Header card ── */}
@@ -116,14 +143,14 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
       )}
 
       {/* ── Summary ── */}
-      {meeting.summary && (
+      {(liveSummary !== undefined || meeting.summary) && (
         <div className={card}>
           <div className="flex items-center gap-2 mb-4">
             <IconChat width={20} height={20} className="text-primary" />
             <span className={sectionHeading}>회의 요약</span>
           </div>
-          <p className="text-[16px] text-body leading-[26px] m-0 tracking-[-0.31px]">
-            {meeting.summary}
+          <p className="text-[16px] text-body leading-[26px] m-0 tracking-[-0.31px] min-h-[26px]">
+            {liveSummary ?? meeting.summary}
           </p>
         </div>
       )}
@@ -139,9 +166,9 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
               회의 스크립트
             </span>
           </div>
-          {meeting.scripts && meeting.scripts.length > 0 ? (
+          {((liveScripts ?? meeting.scripts)?.length ?? 0) > 0 ? (
             <div className="flex flex-col gap-6 max-h-[600px] overflow-y-auto pb-6">
-              {meeting.scripts.map((seg, i) => (
+              {(liveScripts ?? meeting.scripts).map((seg, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <span className="text-md text-[#e5e5e8] min-w-[48px] shrink-0 tracking-[-0.15px]">
                     {formatSeconds(seg.startTime)}
@@ -191,12 +218,34 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
                 {meeting.schedules.map((s: Schedule) => (
                   <div
                     key={s.id}
+                    onMouseEnter={() => setHoveredScheduleId(s.id)}
+                    onMouseLeave={() => setHoveredScheduleId(null)}
                     className="bg-schedule-item border border-schedule-item-border rounded-md px-[17px] py-2.5 flex items-center justify-between"
                   >
                     <span className="text-[16px] text-title tracking-[-0.35px]">{s.title}</span>
-                    <span className="text-sm text-[#909090] tracking-[-0.26px]">
-                      {s.startTime.slice(0, 10)}
-                    </span>
+                    <div className="relative flex items-center justify-end shrink-0">
+                      <span className={`text-sm text-[#909090] tracking-[-0.26px] text-right whitespace-pre-line leading-[18px] ${hoveredScheduleId === s.id ? 'invisible' : ''}`}>
+                        {formatScheduleDate(s)}
+                      </span>
+                      {hoveredScheduleId === s.id && (
+                        <div className="absolute right-0 flex items-center gap-2">
+                          <button
+                            onClick={e => setEditSchedule({ schedule: s, x: e.clientX, y: e.clientY })}
+                            className="bg-transparent border-none cursor-pointer p-0 flex"
+                          >
+                            <IconEdit width={15} height={15} className="text-text-tertiary" />
+                          </button>
+                          <button
+                            onClick={() => deleteSchedule.mutate(s.id, {
+                              onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) }),
+                            })}
+                            className="bg-transparent border-none cursor-pointer p-0 flex"
+                          >
+                            <IconTrash width={15} height={15} className="text-danger" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -207,5 +256,20 @@ export function MeetingDetail({ meeting, projectId }: MeetingDetailProps) {
         </div>
       </div>
     </div>
+
+    {editSchedule && (
+      <SchedulePopup
+        schedule={editSchedule.schedule}
+        projectId={projectId}
+        meetings={meetings}
+        position={{ x: editSchedule.x, y: editSchedule.y }}
+        initialMode="edit"
+        onClose={() => {
+          setEditSchedule(null)
+          qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) })
+        }}
+      />
+    )}
+    </>
   )
 }

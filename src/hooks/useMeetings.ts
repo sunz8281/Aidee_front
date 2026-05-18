@@ -30,6 +30,7 @@ export function useMeeting(meetingId: string) {
       return res.data
     },
     enabled: !!meetingId,
+    refetchOnWindowFocus: false,
   })
 }
 

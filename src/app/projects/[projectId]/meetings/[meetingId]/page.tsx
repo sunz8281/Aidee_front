@@ -14,6 +14,7 @@ import { useMeeting, useMeetings, useUpdateMeeting, useDeleteMeeting } from '@/h
 import { useAgentStore } from '@/store/agentStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/constants/queryKeys'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
 
 export default function MeetingPage() {
   const params = useParams()
@@ -37,14 +38,36 @@ export default function MeetingPage() {
   const updateMeeting = useUpdateMeeting(meetingId)
   const deleteMeeting = useDeleteMeeting(projectId)
 
-  // 새로고침 등으로 active SSE 없이 processing 상태인 경우 폴링으로 완료 감지
+  // 새로고침 등으로 active SSE 없이 processing 상태인 경우 status/stream SSE로 완료 감지
   useEffect(() => {
     if (meeting?.status !== 'processing' || isProcessing) return
-    const id = setInterval(() => {
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
-    }, 3000)
-    return () => clearInterval(id)
-  }, [meeting?.status, isProcessing, meetingId, qc])
+
+    const ctrl = new AbortController()
+
+    fetchEventSource(
+      `${process.env.NEXT_PUBLIC_API_URL}/meetings/${meetingId}/status/stream`,
+      {
+        signal: ctrl.signal,
+        onmessage(ev) {
+          try {
+            const data = JSON.parse(ev.data) as { status?: string }
+            const status = ev.event || data.status
+            if (status === 'done' || status === 'failed') {
+              qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
+              qc.invalidateQueries({ queryKey: QUERY_KEYS.meetings(projectId) })
+              ctrl.abort()
+            }
+          } catch {}
+        },
+        onerror() {
+          ctrl.abort()
+          throw new Error('status stream closed')
+        },
+      },
+    ).catch(() => {})
+
+    return () => ctrl.abort()
+  }, [meeting?.status, isProcessing, meetingId, projectId, qc])
 
   const handleDeleteMeeting = async () => {
     if (!confirm('회의를 삭제하시겠습니까?')) return

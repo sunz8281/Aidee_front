@@ -33,7 +33,7 @@ export default function ProjectPage() {
   const updateTitle = useUpdateProjectTitle(projectId)
   const deleteProject = useDeleteProject()
   const createMeeting = useCreateMeeting(projectId)
-  const { toggle: toggleAgent } = useAgentStore()
+  const { isOpen: agentOpen, toggle: toggleAgent } = useAgentStore()
 
   const handleTitleEdit = () => {
     setTitleDraft(project?.name ?? '')
@@ -167,7 +167,7 @@ export default function ProjectPage() {
         </div>
       </main>
 
-      <AgentButton onClick={toggleAgent} />
+      {!agentOpen && <AgentButton onClick={toggleAgent} />}
       <AgentBar projectId={projectId} />
     </div>
   )

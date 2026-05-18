@@ -162,7 +162,7 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
       )}
 
       {/* ── Summary ── */}
-      {(liveSummary !== undefined || meeting.summary) && (
+      {(liveScripts !== undefined || liveSummary !== undefined || meeting.summary) && (
         <div className={card}>
           <div className="flex items-center gap-2 mb-4">
             <IconChat width={20} height={20} className="text-primary" />

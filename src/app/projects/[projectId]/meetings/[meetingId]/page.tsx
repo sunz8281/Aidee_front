@@ -47,6 +47,7 @@ export default function MeetingPage() {
     let sttBuf = ''
     const scripts: { startTime: number; contents: string }[] = []
     let analysisBuf = ''
+    let sttHasStarted = false
 
     function extractSummary(buf: string): string | null {
       const cleaned = buf.replace(/^```json\s*/, '').replace(/```\s*$/, '')
@@ -75,6 +76,12 @@ export default function MeetingPage() {
             const data = JSON.parse(ev.data) as { message?: string; status?: string }
 
             if (ev.event === 'stt') {
+              if (!sttHasStarted) {
+                sttHasStarted = true
+                setSttStarted(true)   // 첫 stt 즉시 라이브뷰 전환 (normal upload와 동일)
+                setLiveSummary('')    // 요약 박스 미리 표시
+                setLiveScripts([])
+              }
               sttBuf += data.message ?? ''
               const lines = sttBuf.split('\n')
               sttBuf = lines[lines.length - 1]
@@ -96,7 +103,10 @@ export default function MeetingPage() {
                 } catch {}
               }
               sttBuf = ''
-              setSttStarted(true)
+              if (!sttHasStarted) {   // stt 이벤트 없이 stt_done만 오는 엣지케이스
+                setSttStarted(true)
+                setLiveSummary('')
+              }
             } else if (ev.event === 'analyzing') {
               analysisBuf += data.message ?? ''
               const summary = extractSummary(analysisBuf)

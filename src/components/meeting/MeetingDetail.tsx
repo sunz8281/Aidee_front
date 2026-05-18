@@ -6,9 +6,8 @@ import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar, IconTr
 import type { Meeting, Schedule, MeetingSummary } from '@/types'
 import { useUpdateMeeting } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
-import { useCreateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
+import { useCreateSchedule, useUpdateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
 import { QUERY_KEYS } from '@/constants/queryKeys'
-import { SchedulePopup } from '@/components/project/SchedulePopup'
 
 interface MeetingDetailProps {
   meeting: Meeting
@@ -16,6 +15,27 @@ interface MeetingDetailProps {
   meetings: MeetingSummary[]
   liveScripts?: { startTime: number; contents: string }[]
   liveSummary?: string
+}
+
+interface InlineEdit {
+  schedule: Schedule
+  title: string
+  allDay: boolean
+  startVal: string
+  endVal: string
+  selectedMeetingId: string | null
+  dropdownOpen: boolean
+  prevStart: string
+  prevEnd: string
+}
+
+function toInputValue(iso: string, allDay: boolean) {
+  return allDay ? iso.slice(0, 10) : iso.slice(0, 16)
+}
+
+function toIso(value: string, allDay: boolean, isEnd: boolean) {
+  if (allDay) return isEnd ? `${value}T23:59:59` : `${value}T00:00:00`
+  return value.length === 16 ? `${value}:00` : value
 }
 
 function formatScheduleDate(s: Schedule): string {
@@ -42,6 +62,140 @@ function formatSeconds(sec: number) {
   return `${m}:${s}`
 }
 
+interface InlineEditFormProps {
+  inlineEdit: InlineEdit
+  meetings: MeetingSummary[]
+  savePending: boolean
+  deletePending: boolean
+  onChange: (patch: Partial<InlineEdit>) => void
+  onSave: () => void
+  onDelete: () => void
+}
+
+function InlineEditForm({ inlineEdit, meetings, savePending, deletePending, onChange, onSave, onDelete }: InlineEditFormProps) {
+  const selectedMeeting = meetings.find(m => m.id === inlineEdit.selectedMeetingId)
+
+  const handleAllDayChange = (checked: boolean) => {
+    if (checked) {
+      onChange({
+        allDay: true,
+        prevStart: inlineEdit.startVal,
+        prevEnd: inlineEdit.endVal,
+        startVal: inlineEdit.startVal.slice(0, 10),
+        endVal: inlineEdit.endVal.slice(0, 10),
+      })
+    } else {
+      const startTime = inlineEdit.prevStart.length > 10 ? inlineEdit.prevStart.slice(11, 16) : '00:00'
+      const endTime = inlineEdit.prevEnd.length > 10 ? inlineEdit.prevEnd.slice(11, 16) : '23:59'
+      onChange({
+        allDay: false,
+        startVal: `${inlineEdit.startVal}T${startTime}`,
+        endVal: `${inlineEdit.endVal}T${endTime}`,
+      })
+    }
+  }
+
+  return (
+    <div className="bg-card border-2 border-primary rounded-md px-[17px] py-3 flex flex-col gap-2.5">
+      {/* Title + save */}
+      <div className="flex items-center justify-between gap-2">
+        <input
+          autoFocus
+          value={inlineEdit.title}
+          onChange={e => onChange({ title: e.target.value })}
+          onKeyDown={e => { if (e.key === 'Enter') onSave() }}
+          className="flex-1 text-[15px] font-bold text-title border-none outline-none bg-transparent p-0"
+        />
+        <button
+          onClick={onSave}
+          disabled={savePending}
+          className="bg-transparent border-none cursor-pointer p-0 shrink-0"
+        >
+          <IconCheck width={15} height={15} className="text-primary" />
+        </button>
+      </div>
+
+      {/* Meeting selector */}
+      <div className="relative">
+        <button
+          onClick={() => onChange({ dropdownOpen: !inlineEdit.dropdownOpen })}
+          className="w-full flex items-center justify-between gap-1 bg-transparent border-none cursor-pointer p-0"
+        >
+          <span className={['text-sm overflow-hidden text-ellipsis whitespace-nowrap', selectedMeeting ? 'text-title' : 'text-[#b0b0b0]'].join(' ')}>
+            {selectedMeeting?.title ?? '연결된 회의 없음'}
+          </span>
+          <span className="text-[10px] text-[#808080] shrink-0">▾</span>
+        </button>
+        {inlineEdit.dropdownOpen && (
+          <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-card border border-[#dedede] rounded-md z-10 overflow-hidden max-h-[160px] overflow-y-auto">
+            <div
+              onClick={() => onChange({ selectedMeetingId: null, dropdownOpen: false })}
+              className={['px-2 py-1.5 text-sm text-[#808080] cursor-pointer', inlineEdit.selectedMeetingId === null ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
+            >
+              없음
+            </div>
+            {meetings.map(m => (
+              <div
+                key={m.id}
+                onClick={() => onChange({ selectedMeetingId: m.id, dropdownOpen: false })}
+                className={['px-2 py-1.5 text-sm text-title cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap', m.id === inlineEdit.selectedMeetingId ? 'bg-dropdown-selected' : 'bg-card'].join(' ')}
+              >
+                {m.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* All-day */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={inlineEdit.allDay}
+          onChange={e => handleAllDayChange(e.target.checked)}
+          className="w-3 h-3 cursor-pointer accent-primary"
+        />
+        <span className={['text-sm', inlineEdit.allDay ? 'text-title' : 'text-[#808080]'].join(' ')}>
+          하루 종일
+        </span>
+      </label>
+
+      {/* Date/time */}
+      <div className="flex flex-col gap-1">
+        <input
+          type={inlineEdit.allDay ? 'date' : 'datetime-local'}
+          value={inlineEdit.startVal}
+          onChange={e => {
+            const newStart = e.target.value
+            onChange({
+              startVal: newStart,
+              endVal: newStart && inlineEdit.endVal && newStart > inlineEdit.endVal ? newStart : inlineEdit.endVal,
+            })
+          }}
+          className="text-xs text-[#808080] border-none outline-none bg-transparent p-0 w-full"
+        />
+        <span className="text-xs text-[#c0c0c0]">~</span>
+        <input
+          type={inlineEdit.allDay ? 'date' : 'datetime-local'}
+          value={inlineEdit.endVal}
+          onChange={e => onChange({ endVal: e.target.value })}
+          className="text-xs text-[#808080] border-none outline-none bg-transparent p-0 w-full"
+        />
+      </div>
+
+      {/* Delete */}
+      <button
+        onClick={onDelete}
+        disabled={deletePending}
+        className="flex items-center gap-1 bg-transparent border-none cursor-pointer p-0 self-start"
+      >
+        <IconTrash width={11} height={11} className="text-danger" />
+        <span className="text-xs text-danger">삭제</span>
+      </button>
+    </div>
+  )
+}
+
 export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveSummary }: MeetingDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(meeting.title)
@@ -50,14 +204,15 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
   )
   const [memoDraft, setMemoDraft] = useState(meeting.memo ?? '')
   const [memoSaveTimeout, setMemoSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(null)
+  const [inlineEdit, setInlineEdit] = useState<InlineEdit | null>(null)
 
   const updateMeeting = useUpdateMeeting(meeting.id)
   const updateMemo = useUpdateMemo(meeting.id)
   const createSchedule = useCreateSchedule(projectId)
+  const updateSchedule = useUpdateSchedule(projectId)
   const deleteSchedule = useDeleteSchedule()
   const qc = useQueryClient()
-  const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(null)
-  const [editSchedule, setEditSchedule] = useState<{ schedule: Schedule; x: number; y: number } | null>(null)
 
   const handleEditStart = () => {
     setTitleDraft(meeting.title)
@@ -91,7 +246,21 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
     updateMemo.mutate(memoDraft)
   }
 
-  const handleAddSchedule = async (e: React.MouseEvent) => {
+  const openInlineEdit = (schedule: Schedule) => {
+    setInlineEdit({
+      schedule,
+      title: schedule.title,
+      allDay: schedule.allDay,
+      startVal: toInputValue(schedule.startTime, schedule.allDay),
+      endVal: toInputValue(schedule.endTime, schedule.allDay),
+      selectedMeetingId: schedule.meetingId ?? null,
+      dropdownOpen: false,
+      prevStart: toInputValue(schedule.startTime, schedule.allDay),
+      prevEnd: toInputValue(schedule.endTime, schedule.allDay),
+    })
+  }
+
+  const handleAddSchedule = async () => {
     const date = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
     const created = await createSchedule.mutateAsync({
       title: '새 일정',
@@ -100,22 +269,43 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
       allDay: false,
       meetingId: meeting.id,
     })
-    const newSchedule: Schedule = {
+    openInlineEdit({
       ...created,
       allDay: false,
       meetingId: meeting.id,
       createdAt: created.createdAt ?? new Date().toISOString(),
-    }
-    setEditSchedule({ schedule: newSchedule, x: e.clientX, y: e.clientY })
+    })
+  }
+
+  const handleInlineSave = async () => {
+    if (!inlineEdit) return
+    await updateSchedule.mutateAsync({
+      id: inlineEdit.schedule.id,
+      title: inlineEdit.title,
+      allDay: inlineEdit.allDay,
+      startTime: toIso(inlineEdit.startVal, inlineEdit.allDay, false),
+      endTime: toIso(inlineEdit.endVal, inlineEdit.allDay, true),
+      meetingId: inlineEdit.selectedMeetingId,
+    })
+    setInlineEdit(null)
+    qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) })
+  }
+
+  const handleInlineDelete = async () => {
+    if (!inlineEdit) return
+    await deleteSchedule.mutateAsync(inlineEdit.schedule.id)
+    setInlineEdit(null)
+    qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) })
   }
 
   const displayDate = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
-
   const card = 'bg-card border border-card-border rounded-[10px] p-[25px]'
   const sectionHeading = 'text-xl font-semibold text-title'
 
+  const schedulesToShow = meeting.schedules ?? []
+  const showPendingAtEnd = inlineEdit && !schedulesToShow.some(s => s.id === inlineEdit.schedule.id)
+
   return (
-    <>
     <div className="flex flex-col gap-6">
 
       {/* ── Header card ── */}
@@ -236,41 +426,67 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
                 +
               </button>
             </div>
-            {meeting.schedules && meeting.schedules.length > 0 ? (
+
+            {schedulesToShow.length > 0 || showPendingAtEnd ? (
               <div className="flex flex-col gap-2 pb-6">
-                {meeting.schedules.map((s: Schedule) => (
-                  <div
-                    key={s.id}
-                    onMouseEnter={() => setHoveredScheduleId(s.id)}
-                    onMouseLeave={() => setHoveredScheduleId(null)}
-                    className="bg-schedule-item border border-schedule-item-border rounded-md px-[17px] py-2.5 flex items-center justify-between"
-                  >
-                    <span className="text-[16px] text-title tracking-[-0.35px]">{s.title}</span>
-                    <div className="relative flex items-center justify-end shrink-0">
-                      <span className={`text-sm text-[#909090] tracking-[-0.26px] text-right whitespace-pre-line leading-[18px] ${hoveredScheduleId === s.id ? 'invisible' : ''}`}>
-                        {formatScheduleDate(s)}
-                      </span>
-                      {hoveredScheduleId === s.id && (
-                        <div className="absolute right-0 flex items-center gap-2">
-                          <button
-                            onClick={e => setEditSchedule({ schedule: s, x: e.clientX, y: e.clientY })}
-                            className="bg-transparent border-none cursor-pointer p-0 flex"
-                          >
-                            <IconEdit width={15} height={15} className="text-text-tertiary" />
-                          </button>
-                          <button
-                            onClick={() => deleteSchedule.mutate(s.id, {
-                              onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) }),
-                            })}
-                            className="bg-transparent border-none cursor-pointer p-0 flex"
-                          >
-                            <IconTrash width={15} height={15} className="text-danger" />
-                          </button>
-                        </div>
-                      )}
+                {schedulesToShow.map((s: Schedule) =>
+                  inlineEdit?.schedule.id === s.id ? (
+                    <InlineEditForm
+                      key={s.id}
+                      inlineEdit={inlineEdit}
+                      meetings={meetings}
+                      savePending={updateSchedule.isPending}
+                      deletePending={deleteSchedule.isPending}
+                      onChange={patch => setInlineEdit(v => v && { ...v, ...patch })}
+                      onSave={handleInlineSave}
+                      onDelete={handleInlineDelete}
+                    />
+                  ) : (
+                    <div
+                      key={s.id}
+                      onMouseEnter={() => setHoveredScheduleId(s.id)}
+                      onMouseLeave={() => setHoveredScheduleId(null)}
+                      className="bg-schedule-item border border-schedule-item-border rounded-md px-[17px] py-2.5 flex items-center justify-between"
+                    >
+                      <span className="text-[16px] text-title tracking-[-0.35px]">{s.title}</span>
+                      <div className="relative flex items-center justify-end shrink-0">
+                        <span className={`text-sm text-[#909090] tracking-[-0.26px] text-right whitespace-pre-line leading-[18px] ${hoveredScheduleId === s.id ? 'invisible' : ''}`}>
+                          {formatScheduleDate(s)}
+                        </span>
+                        {hoveredScheduleId === s.id && (
+                          <div className="absolute right-0 flex items-center gap-2">
+                            <button
+                              onClick={() => openInlineEdit(s)}
+                              className="bg-transparent border-none cursor-pointer p-0 flex"
+                            >
+                              <IconEdit width={15} height={15} className="text-text-tertiary" />
+                            </button>
+                            <button
+                              onClick={() => deleteSchedule.mutate(s.id, {
+                                onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) }),
+                              })}
+                              className="bg-transparent border-none cursor-pointer p-0 flex"
+                            >
+                              <IconTrash width={15} height={15} className="text-danger" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
+
+                {showPendingAtEnd && (
+                  <InlineEditForm
+                    inlineEdit={inlineEdit}
+                    meetings={meetings}
+                    savePending={updateSchedule.isPending}
+                    deletePending={deleteSchedule.isPending}
+                    onChange={patch => setInlineEdit(v => v && { ...v, ...patch })}
+                    onSave={handleInlineSave}
+                    onDelete={handleInlineDelete}
+                  />
+                )}
               </div>
             ) : (
               <div className="text-md text-text-tertiary pb-6">추출된 일정이 없습니다.</div>
@@ -279,20 +495,5 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
         </div>
       </div>
     </div>
-
-    {editSchedule && (
-      <SchedulePopup
-        schedule={editSchedule.schedule}
-        projectId={projectId}
-        meetings={meetings}
-        position={{ x: editSchedule.x, y: editSchedule.y }}
-        initialMode="edit"
-        onClose={() => {
-          setEditSchedule(null)
-          qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meeting.id) })
-        }}
-      />
-    )}
-    </>
   )
 }

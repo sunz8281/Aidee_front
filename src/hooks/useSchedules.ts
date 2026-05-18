@@ -53,7 +53,27 @@ export function useUpdateSchedule(projectId: string) {
       const res = await apiClient.put(`/schedules/${id}`, data)
       return res.data
     },
-    onSuccess: () => {
+    onMutate: async ({ id, ...data }) => {
+      await qc.cancelQueries({ queryKey: ['schedules', projectId] })
+
+      // Snapshot all month caches for this project (schedule can span months)
+      const previousData = qc.getQueriesData<SchedulesResponse>({ queryKey: ['schedules', projectId] })
+
+      previousData.forEach(([queryKey, cached]) => {
+        if (!cached) return
+        qc.setQueryData<SchedulesResponse>(queryKey, {
+          items: cached.items.map(s => s.id === id ? { ...s, ...data } : s),
+        })
+      })
+
+      return { previousData }
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.previousData.forEach(([queryKey, data]) => {
+        qc.setQueryData(queryKey, data)
+      })
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['schedules', projectId] })
     },
   })

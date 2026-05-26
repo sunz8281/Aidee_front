@@ -73,7 +73,7 @@ export default function MeetingPage() {
         signal: ctrl.signal,
         onmessage(ev) {
           try {
-            const data = JSON.parse(ev.data) as { message?: string; status?: string }
+            const data = JSON.parse(ev.data) as { message?: string; status?: string; startTime?: number; text?: string }
 
             if (ev.event === 'stt') {
               if (!sttHasStarted) {
@@ -82,26 +82,11 @@ export default function MeetingPage() {
                 setLiveSummary('')    // 요약 박스 미리 표시
                 setLiveScripts([])
               }
-              sttBuf += data.message ?? ''
-              const lines = sttBuf.split('\n')
-              sttBuf = lines[lines.length - 1]
-              for (let i = 0; i < lines.length - 1; i++) {
-                const line = lines[i].trim()
-                if (!line) continue
-                try {
-                  const seg = JSON.parse(line) as { startTime: number; text: string }
-                  scripts.push({ startTime: seg.startTime, contents: seg.text })
-                  setLiveScripts([...scripts])
-                } catch {}
+              if (typeof data.startTime === 'number' && data.text !== undefined) {
+                scripts.push({ startTime: data.startTime, contents: data.text })
+                setLiveScripts([...scripts])
               }
             } else if (ev.event === 'stt_done') {
-              if (sttBuf.trim()) {
-                try {
-                  const seg = JSON.parse(sttBuf.trim()) as { startTime: number; text: string }
-                  scripts.push({ startTime: seg.startTime, contents: seg.text })
-                  setLiveScripts([...scripts])
-                } catch {}
-              }
               sttBuf = ''
               if (!sttHasStarted) {   // stt 이벤트 없이 stt_done만 오는 엣지케이스
                 setSttStarted(true)

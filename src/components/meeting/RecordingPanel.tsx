@@ -164,37 +164,22 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
           method: 'POST',
           body: formData,
           onmessage(ev) {
-              const data = JSON.parse(ev.data) as { message: string }
+              const data = JSON.parse(ev.data) as { message?: string; startTime?: number; text?: string }
 
               if (ev.event === 'upload') {
-                setProgressLabel(data.message)
-                onProgressUpdate?.(data.message)
+                setProgressLabel(data.message ?? '')
+                onProgressUpdate?.(data.message ?? '')
               } else if (ev.event === 'stt') {
                 onSttStart?.()
-                sttBufferRef.current += data.message
-                const lines = sttBufferRef.current.split('\n')
-                sttBufferRef.current = lines[lines.length - 1]
-                for (let i = 0; i < lines.length - 1; i++) {
-                  const line = lines[i].trim()
-                  if (!line) continue
-                  try {
-                    const seg = JSON.parse(line) as { startTime: number; text: string }
-                    liveScriptsRef.current.push({ startTime: seg.startTime, contents: seg.text })
-                    onScriptUpdate?.([...liveScriptsRef.current])
-                  } catch {}
+                if (typeof data.startTime === 'number' && data.text !== undefined) {
+                  liveScriptsRef.current.push({ startTime: data.startTime, contents: data.text })
+                  onScriptUpdate?.([...liveScriptsRef.current])
                 }
               } else if (ev.event === 'stt_done') {
-                if (sttBufferRef.current.trim()) {
-                  try {
-                    const seg = JSON.parse(sttBufferRef.current.trim()) as { startTime: number; text: string }
-                    liveScriptsRef.current.push({ startTime: seg.startTime, contents: seg.text })
-                    onScriptUpdate?.([...liveScriptsRef.current])
-                  } catch {}
-                }
                 sttBufferRef.current = ''
-                setProgressLabel(data.message)
+                setProgressLabel(data.message ?? '')
               } else if (ev.event === 'analyzing') {
-                analysisBufferRef.current += data.message
+                analysisBufferRef.current += data.message ?? ''
                 const summary = extractStreamingSummary(analysisBufferRef.current)
                 if (summary) onSummaryUpdate?.(summary)
               } else if (ev.event === 'done') {

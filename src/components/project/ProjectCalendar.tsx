@@ -67,6 +67,7 @@ interface BarSegment {
   lane: number
   continueLeft: boolean
   continueRight: boolean
+  isFirstInView: boolean
 }
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
@@ -140,6 +141,13 @@ function computeBarSegments(schedules: Schedule[], year: number, month: number):
     }
   })
 
+  // Determine first visible row per schedule
+  const firstRowInView = new Map<string, number>()
+  for (const seg of raw) {
+    const prev = firstRowInView.get(seg.schedule.id)
+    if (prev === undefined || seg.row < prev) firstRowInView.set(seg.schedule.id, seg.row)
+  }
+
   // Step 2: assign lanes per row (greedy, first-fit)
   const result: BarSegment[] = []
 
@@ -154,7 +162,7 @@ function computeBarSegments(schedules: Schedule[], year: number, month: number):
       while (assigned.some(a => a.lane === lane && colsOverlap(a.startCol, a.endCol, seg.startCol, seg.endCol))) {
         lane++
       }
-      const s = { ...seg, lane }
+      const s = { ...seg, lane, isFirstInView: firstRowInView.get(seg.schedule.id) === row }
       assigned.push(s)
       result.push(s)
     }
@@ -173,7 +181,7 @@ interface ScheduleBarProps {
 }
 
 function ScheduleBar({ segment, onResizeStart, onClick, isDragging }: ScheduleBarProps) {
-  const { schedule, startCol, endCol, lane, continueLeft, continueRight } = segment
+  const { schedule, startCol, endCol, lane, continueLeft, continueRight, isFirstInView } = segment
   const colSpan = endCol - startCol + 1
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -215,7 +223,7 @@ function ScheduleBar({ segment, onResizeStart, onClick, isDragging }: ScheduleBa
         />
       )}
       <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap px-0.5 pointer-events-none">
-        {!continueLeft && schedule.title}
+        {isFirstInView && schedule.title}
       </span>
       {!continueRight && (
         <div
@@ -231,7 +239,7 @@ function ScheduleBar({ segment, onResizeStart, onClick, isDragging }: ScheduleBa
 // ─── GhostBar: drag-move preview ─────────────────────────────────────────────
 
 function GhostBar({ segment }: { segment: BarSegment }) {
-  const { startCol, endCol, lane, continueLeft, continueRight, schedule } = segment
+  const { startCol, endCol, lane, continueLeft, continueRight, isFirstInView, schedule } = segment
   const colSpan = endCol - startCol + 1
   return (
     <div
@@ -253,7 +261,7 @@ function GhostBar({ segment }: { segment: BarSegment }) {
       ].join(' ')}
     >
       <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap px-1">
-        {!continueLeft && schedule.title}
+        {isFirstInView && schedule.title}
       </span>
     </div>
   )

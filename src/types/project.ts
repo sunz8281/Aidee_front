@@ -1,5 +1,6 @@
 import type { MeetingSummary } from './meeting'
 import type { Schedule } from './schedule'
+import type { Memo } from './memo'
 
 export interface ProjectSummary {
   id: string
@@ -23,6 +24,7 @@ export interface SharedProject {
   id: string
   name: string
   meetings: MeetingSummary[]
+  memos: Memo[]
   shareToken: string
 }
 

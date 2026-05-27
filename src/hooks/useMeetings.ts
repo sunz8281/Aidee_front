@@ -87,3 +87,15 @@ export function useDeleteMeeting(projectId: string) {
     },
   })
 }
+
+export function useSharedMeeting(shareToken: string, meetingId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.sharedMeeting(shareToken, meetingId),
+    queryFn: async () => {
+      const res = await apiClient.get<Meeting>(`/share/${shareToken}/meetings/${meetingId}`)
+      return res.data
+    },
+    enabled: !!shareToken && !!meetingId,
+    retry: false,
+  })
+}

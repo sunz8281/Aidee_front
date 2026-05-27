@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { IconLogo, IconMemo } from '@/components/icons'
 import { MeetingList } from '@/components/project/MeetingList'
 import { SharedCalendar } from '@/components/project/SharedCalendar'
+import { MemoSection } from '@/components/project/MemoSection'
 import { useSharedProject } from '@/hooks/useProjects'
 
 export default function SharedProjectPage() {
@@ -34,6 +35,7 @@ export default function SharedProjectPage() {
   }
 
   const meetings = project.meetings ?? []
+  const memos = project.memos ?? []
 
   return (
     <div className="flex flex-col min-h-screen bg-surface">
@@ -64,6 +66,7 @@ export default function SharedProjectPage() {
               projectId={project.id}
               meetings={meetings}
               readOnly
+              getMeetingHref={id => `/share/${shareToken}/meetings/${id}`}
             />
           </div>
           <SharedCalendar
@@ -79,11 +82,15 @@ export default function SharedProjectPage() {
 
         {/* Memo section */}
         <div className="bg-card border border-border rounded-lg px-5 py-4 mt-6">
-          <div className="flex items-center gap-2">
+          <div className={['flex items-center gap-2', memos.length ? 'mb-4' : ''].join(' ')}>
             <IconMemo width={16} height={16} />
             <span className="text-md font-semibold text-text-primary">메모</span>
           </div>
-          <div className="text-base text-text-tertiary py-2">공유 페이지에서는 메모를 표시할 수 없습니다.</div>
+          {memos.length > 0 ? (
+            <MemoSection memos={memos} meetings={meetings} readOnly />
+          ) : (
+            <div className="text-base text-text-tertiary py-2">회의 메모가 없습니다.</div>
+          )}
         </div>
       </main>
     </div>

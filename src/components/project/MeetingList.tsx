@@ -10,10 +10,13 @@ interface MeetingListProps {
   onAdd?: () => void
   isCreating?: boolean
   readOnly?: boolean
+  getMeetingHref?: (meetingId: string) => string
 }
 
-export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly }: MeetingListProps) {
+export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly, getMeetingHref }: MeetingListProps) {
   const firstMeeting = meetings[0]
+  const defaultHref = (id: string) => `/projects/${projectId}/meetings/${id}`
+  const getHref = getMeetingHref ?? defaultHref
 
   return (
     <div className="bg-card border border-border rounded-lg flex flex-col w-full">
@@ -55,14 +58,14 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly }
           )
           return readOnly
             ? <div key={meeting.id}>{inner}</div>
-            : <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`}>{inner}</Link>
+            : <Link key={meeting.id} href={getHref(meeting.id)}>{inner}</Link>
         })}
       </div>
 
       {/* Footer */}
       <div className="shrink-0">
         {!readOnly && firstMeeting ? (
-          <Link href={`/projects/${projectId}/meetings/${firstMeeting.id}`}>
+          <Link href={getHref(firstMeeting.id)}>
             <div className="flex items-center justify-end gap-1 px-5 py-3 text-base text-text-secondary cursor-pointer transition-colors hover:text-primary">
               전체보기
               <span className="text-lg">›</span>

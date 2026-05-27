@@ -41,9 +41,10 @@ function renderWithLinks(text: string) {
 
 interface MemoCardProps {
   memo: Memo
+  readOnly?: boolean
 }
 
-function MemoCard({ memo }: MemoCardProps) {
+function MemoCard({ memo, readOnly }: MemoCardProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(memo.memo)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -76,6 +77,17 @@ function MemoCard({ memo }: MemoCardProps) {
   const handleCancel = () => {
     setDraft(memo.memo)
     setEditing(false)
+  }
+
+  if (readOnly) {
+    return (
+      <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[14px] py-3 flex flex-col justify-between gap-5 min-h-[100px] overflow-hidden">
+        <div className="text-base text-body leading-relaxed whitespace-pre-line break-words flex-1 min-w-0">
+          {renderWithLinks(memo.memo ?? '')}
+        </div>
+        <div className="text-sm text-[#929292] text-right">{memo.meetingTitle}</div>
+      </div>
+    )
   }
 
   if (editing) {
@@ -128,15 +140,16 @@ function MemoCard({ memo }: MemoCardProps) {
 interface MemoSectionProps {
   memos: Memo[]
   meetings: MeetingSummary[]
+  readOnly?: boolean
 }
 
-export function MemoSection({ memos }: MemoSectionProps) {
+export function MemoSection({ memos, readOnly }: MemoSectionProps) {
   if (memos.length === 0) return null
 
   return (
     <div className="grid grid-cols-4 gap-3">
       {memos.map((memo, i) => (
-        <MemoCard key={`${memo.meetingId}-${i}`} memo={memo} />
+        <MemoCard key={`${memo.meetingId}-${i}`} memo={memo} readOnly={readOnly} />
       ))}
     </div>
   )

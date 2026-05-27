@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { apiClient } from '@/lib/axios'
 
 const PUBLIC_PATHS = ['/login']
 
@@ -16,9 +17,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       setReady(true)
       return
     }
-    // 쿠키 기반 인증 — 쿠키가 있으면 바로 통과.
-    // 실제 인증 여부는 API 401 응답 시 axios 인터셉터가 /login으로 리다이렉트.
-    setReady(true)
+    apiClient.get('/projects')
+      .then(() => setReady(true))
+      .catch(() => {
+        // 401은 axios 인터셉터가 /login으로 리다이렉트 처리
+      })
   }, [isPublic, router])
 
   if (!ready) return null

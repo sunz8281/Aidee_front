@@ -357,17 +357,15 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
       )}
 
       {/* ── Summary ── */}
-      {(liveScripts !== undefined || liveSummary !== undefined || meeting.summary) && (
-        <div className={card}>
-          <div className="flex items-center gap-2 mb-4">
-            <IconChat width={20} height={20} className="text-primary" />
-            <span className={sectionHeading}>회의 요약</span>
-          </div>
-          <p className="text-[16px] text-body leading-[26px] m-0 tracking-[-0.31px] min-h-[26px]">
-            {liveSummary ?? meeting.summary}
-          </p>
+      <div className={card}>
+        <div className="flex items-center gap-2 mb-4">
+          <IconChat width={20} height={20} className="text-primary" />
+          <span className={sectionHeading}>회의 요약</span>
         </div>
-      )}
+        <p className="text-[16px] text-body leading-[26px] m-0 tracking-[-0.31px] min-h-[26px]">
+          {liveSummary ?? meeting.summary}
+        </p>
+      </div>
 
       {/* ── Script + Right column ── */}
       <div className="flex gap-7 items-start">

@@ -13,6 +13,7 @@ interface SchedulePopupProps {
   position: { x: number; y: number }
   onClose: () => void
   initialMode?: 'view' | 'edit'
+  readOnly?: boolean
 }
 
 const POPUP_W = 210
@@ -39,6 +40,7 @@ export function SchedulePopup({
   position,
   onClose,
   initialMode = 'view',
+  readOnly,
 }: SchedulePopupProps) {
   const [mode, setMode] = useState<'view' | 'edit'>(initialMode)
   const [title, setTitle] = useState(schedule.title)
@@ -129,12 +131,14 @@ export function SchedulePopup({
               </Link>
             )}
           </div>
-          <button
-            onClick={() => setMode('edit')}
-            className="bg-transparent border-none cursor-pointer p-0 shrink-0"
-          >
-            <IconEdit width={16} height={16} className="text-schedule-chip-text" />
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => setMode('edit')}
+              className="bg-transparent border-none cursor-pointer p-0 shrink-0"
+            >
+              <IconEdit width={16} height={16} className="text-schedule-chip-text" />
+            </button>
+          )}
         </div>
 
         <div className="text-sm text-[#808080] leading-[18px]">

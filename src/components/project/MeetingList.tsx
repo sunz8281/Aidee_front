@@ -9,14 +9,12 @@ interface MeetingListProps {
   meetings: MeetingSummary[]
   onAdd?: () => void
   isCreating?: boolean
-  readOnly?: boolean
   getMeetingHref?: (meetingId: string) => string
 }
 
-export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly, getMeetingHref }: MeetingListProps) {
+export function MeetingList({ projectId, meetings, onAdd, isCreating, getMeetingHref }: MeetingListProps) {
   const firstMeeting = meetings[0]
-  const defaultHref = (id: string) => `/projects/${projectId}/meetings/${id}`
-  const getHref = getMeetingHref ?? defaultHref
+  const getHref = getMeetingHref ?? ((id: string) => `/projects/${projectId}/meetings/${id}`)
 
   return (
     <div className="bg-card border border-border rounded-lg flex flex-col w-full">
@@ -26,7 +24,7 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly, 
           <IconChat width={16} height={16} />
           <span className="text-md font-semibold text-text-primary">최근 회의</span>
         </div>
-        {!readOnly && (
+        {onAdd && (
           <button
             onClick={onAdd}
             disabled={isCreating}
@@ -45,9 +43,9 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly, 
             회의가 없습니다
           </div>
         )}
-        {meetings.map(meeting => {
-          const inner = (
-            <div className={['px-5 py-2.5 transition-colors', !readOnly ? 'cursor-pointer hover:bg-[#F8F9FF]' : ''].join(' ')}>
+        {meetings.map(meeting => (
+          <Link key={meeting.id} href={getHref(meeting.id)}>
+            <div className="px-5 py-2.5 cursor-pointer transition-colors hover:bg-[#F8F9FF]">
               <div className="text-md font-medium text-text-primary mb-0.5">{meeting.title}</div>
               <div className="text-sm text-text-tertiary">
                 {meeting.meetingAt
@@ -55,16 +53,13 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly, 
                   : new Date(meeting.createdAt).toLocaleDateString('ko-KR')}
               </div>
             </div>
-          )
-          return readOnly
-            ? <div key={meeting.id}>{inner}</div>
-            : <Link key={meeting.id} href={getHref(meeting.id)}>{inner}</Link>
-        })}
+          </Link>
+        ))}
       </div>
 
       {/* Footer */}
       <div className="shrink-0">
-        {!readOnly && firstMeeting ? (
+        {firstMeeting ? (
           <Link href={getHref(firstMeeting.id)}>
             <div className="flex items-center justify-end gap-1 px-5 py-3 text-base text-text-secondary cursor-pointer transition-colors hover:text-primary">
               전체보기

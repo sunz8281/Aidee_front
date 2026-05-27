@@ -24,6 +24,7 @@ export interface SharedProject {
   id: string
   name: string
   meetings: MeetingSummary[]
+  schedules: Schedule[]
   memos: Memo[]
   shareToken: string
 }

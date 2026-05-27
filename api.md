@@ -287,6 +287,8 @@ Access token 갱신
 - id: string
 - name: string
 - meetings: MeetingSummary[] — 회의 목록 (id, title, status, meetingAt, createdAt)
+- schedules: Schedule[] — 일정 목록
+- memos: Memo[] — 메모 목록 (meetingId, meetingTitle, memo)
 - shareToken: string
 
 **Response 404**: 공유 해제된 토큰

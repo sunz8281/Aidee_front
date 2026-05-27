@@ -25,6 +25,7 @@ interface ProjectCalendarProps {
   year: number
   month: number
   onMonthChange: (year: number, month: number) => void
+  readOnly?: boolean
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -322,6 +323,7 @@ export function ProjectCalendar({
   year,
   month,
   onMonthChange,
+  readOnly,
 }: ProjectCalendarProps) {
   const [popup, setPopup] = useState<{
     schedule: Schedule
@@ -471,6 +473,7 @@ export function ProjectCalendar({
   const nextMonth = () => { if (month === 12) onMonthChange(year + 1, 1); else onMonthChange(year, month + 1) }
 
   const handleDayClick = async (day: number, e: React.MouseEvent) => {
+    if (readOnly) return
     const dateStr = `${year}-${pad(month)}-${pad(day)}`
     const created = await createSchedule.mutateAsync({
       title: '새 일정',
@@ -535,6 +538,12 @@ export function ProjectCalendar({
   }, [])
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    if (readOnly) {
+      setActiveDragSchedule(null)
+      setDragOverCellIdx(null)
+      dragOverCellIdxRef.current = null
+      return
+    }
     const { active } = event
     // Read ref immediately before any state changes
     const refAtEntry = dragOverCellIdxRef.current
@@ -574,6 +583,7 @@ export function ProjectCalendar({
     side: 'left' | 'right',
     e: React.PointerEvent,
   ) => {
+    if (readOnly) return
     e.preventDefault()
     e.stopPropagation()
 
@@ -747,7 +757,8 @@ export function ProjectCalendar({
           meetings={meetings}
           position={popup.position}
           onClose={() => setPopup(null)}
-          initialMode={popup.initialMode}
+          initialMode={readOnly ? 'view' : popup.initialMode}
+          readOnly={readOnly}
         />
       )}
     </DndContext>

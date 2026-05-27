@@ -5,9 +5,13 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { IconLogo, IconMemo } from '@/components/icons'
 import { MeetingList } from '@/components/project/MeetingList'
-import { SharedCalendar } from '@/components/project/SharedCalendar'
+import { ProjectCalendar } from '@/components/project/ProjectCalendar'
 import { MemoSection } from '@/components/project/MemoSection'
 import { useSharedProject } from '@/hooks/useProjects'
+
+function pad(n: number) {
+  return String(n).padStart(2, '0')
+}
 
 export default function SharedProjectPage() {
   const { shareToken } = useParams() as { shareToken: string }
@@ -37,6 +41,26 @@ export default function SharedProjectPage() {
   const meetings = project.meetings ?? []
   const memos = project.memos ?? []
 
+  const calFrom = (() => {
+    const firstDayOfMonth = new Date(calYear, calMonth - 1, 1)
+    const startOffset = firstDayOfMonth.getDay()
+    const from = new Date(calYear, calMonth - 1, 1 - startOffset)
+    return `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`
+  })()
+  const calTo = (() => {
+    const firstDayOfMonth = new Date(calYear, calMonth - 1, 1)
+    const startOffset = firstDayOfMonth.getDay()
+    const to = new Date(calYear, calMonth - 1, 1 - startOffset + 41)
+    return `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}`
+  })()
+
+  // 공유 API에서 받은 전체 일정 중 현재 달력 범위에 해당하는 것만 필터링
+  const visibleSchedules = (project.schedules ?? []).filter(s => {
+    const start = s.startTime.slice(0, 10)
+    const end = s.endTime.slice(0, 10)
+    return start <= calTo && end >= calFrom
+  })
+
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Header */}
@@ -65,11 +89,12 @@ export default function SharedProjectPage() {
             <MeetingList
               projectId={project.id}
               meetings={meetings}
-              readOnly
               getMeetingHref={id => `/share/${shareToken}/meetings/${id}`}
             />
           </div>
-          <SharedCalendar
+          <ProjectCalendar
+            projectId={project.id}
+            schedules={visibleSchedules}
             meetings={meetings}
             year={calYear}
             month={calMonth}
@@ -77,6 +102,7 @@ export default function SharedProjectPage() {
               setCalYear(y)
               setCalMonth(m)
             }}
+            readOnly
           />
         </div>
 

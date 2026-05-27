@@ -1,13 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { IconLogo } from '@/components/icons'
+import { IconLogo, IconMemo } from '@/components/icons'
+import { MeetingList } from '@/components/project/MeetingList'
+import { SharedCalendar } from '@/components/project/SharedCalendar'
 import { useSharedProject } from '@/hooks/useProjects'
 
 export default function SharedProjectPage() {
   const { shareToken } = useParams() as { shareToken: string }
   const { data: project, isLoading, isError } = useSharedProject(shareToken)
+
+  const today = new Date()
+  const [calYear, setCalYear] = useState(today.getFullYear())
+  const [calMonth, setCalMonth] = useState(today.getMonth() + 1)
 
   if (isLoading) {
     return (
@@ -29,9 +36,9 @@ export default function SharedProjectPage() {
   const meetings = project.meetings ?? []
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="flex flex-col min-h-screen bg-surface">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border">
+      <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border shrink-0">
         <IconLogo width={120} height={37} />
         <Link
           href="/login"
@@ -41,34 +48,42 @@ export default function SharedProjectPage() {
         </Link>
       </header>
 
-      <main className="max-w-[800px] mx-auto px-8 pt-10 pb-20">
-        {/* Project name */}
-        <h1 className="text-[26px] font-bold text-text-primary mb-1">{project.name}</h1>
-        <p className="text-base text-text-tertiary mb-8">공유된 프로젝트 · 읽기 전용</p>
+      <main className="max-w-[1280px] mx-auto w-full px-8 pt-8 pb-20">
+        {/* Title */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <h1 className="text-[26px] font-bold text-text-primary m-0">{project.name}</h1>
+            <span className="text-sm text-text-tertiary ml-1">· 읽기 전용</span>
+          </div>
+        </div>
 
-        {/* Meeting list */}
-        <div className="flex flex-col gap-3">
-          {meetings.length === 0 ? (
-            <div className="text-base text-text-tertiary py-4">회의가 없습니다.</div>
-          ) : (
-            meetings.map(meeting => {
-              const dateStr = (meeting.meetingAt ?? meeting.createdAt).slice(0, 10)
-              return (
-                <div
-                  key={meeting.id}
-                  className="bg-card border border-border rounded-[10px] px-5 py-4"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[16px] font-semibold text-text-primary">{meeting.title}</span>
-                    <span className="text-sm text-text-tertiary shrink-0 ml-4">{dateStr}</span>
-                  </div>
-                  {meeting.summary && (
-                    <p className="text-base text-text-secondary line-clamp-2 m-0">{meeting.summary}</p>
-                  )}
-                </div>
-              )
-            })
-          )}
+        {/* Meeting list + Calendar */}
+        <div className="flex gap-4 items-stretch">
+          <div className="w-[300px] shrink-0 flex">
+            <MeetingList
+              projectId={project.id}
+              meetings={meetings}
+              readOnly
+            />
+          </div>
+          <SharedCalendar
+            meetings={meetings}
+            year={calYear}
+            month={calMonth}
+            onMonthChange={(y, m) => {
+              setCalYear(y)
+              setCalMonth(m)
+            }}
+          />
+        </div>
+
+        {/* Memo section */}
+        <div className="bg-card border border-border rounded-lg px-5 py-4 mt-6">
+          <div className="flex items-center gap-2">
+            <IconMemo width={16} height={16} />
+            <span className="text-md font-semibold text-text-primary">메모</span>
+          </div>
+          <div className="text-base text-text-tertiary py-2">공유 페이지에서는 메모를 표시할 수 없습니다.</div>
         </div>
       </main>
     </div>

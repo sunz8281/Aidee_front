@@ -7,11 +7,12 @@ import { IconChat } from '@/components/icons'
 interface MeetingListProps {
   projectId: string
   meetings: MeetingSummary[]
-  onAdd: () => void
+  onAdd?: () => void
   isCreating?: boolean
+  readOnly?: boolean
 }
 
-export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingListProps) {
+export function MeetingList({ projectId, meetings, onAdd, isCreating, readOnly }: MeetingListProps) {
   const firstMeeting = meetings[0]
 
   return (
@@ -22,14 +23,16 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
           <IconChat width={16} height={16} />
           <span className="text-md font-semibold text-text-primary">최근 회의</span>
         </div>
-        <button
-          onClick={onAdd}
-          disabled={isCreating}
-          className="w-6 h-6 rounded-[6px] bg-transparent border-none cursor-pointer flex items-center justify-center text-primary text-xl font-medium disabled:opacity-50"
-          title="새 회의 추가"
-        >
-          +
-        </button>
+        {!readOnly && (
+          <button
+            onClick={onAdd}
+            disabled={isCreating}
+            className="w-6 h-6 rounded-[6px] bg-transparent border-none cursor-pointer flex items-center justify-center text-primary text-xl font-medium disabled:opacity-50"
+            title="새 회의 추가"
+          >
+            +
+          </button>
+        )}
       </div>
 
       {/* List */}
@@ -39,9 +42,9 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
             회의가 없습니다
           </div>
         )}
-        {meetings.map(meeting => (
-          <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`}>
-            <div className="px-5 py-2.5 cursor-pointer transition-colors hover:bg-[#F8F9FF]">
+        {meetings.map(meeting => {
+          const inner = (
+            <div className={['px-5 py-2.5 transition-colors', !readOnly ? 'cursor-pointer hover:bg-[#F8F9FF]' : ''].join(' ')}>
               <div className="text-md font-medium text-text-primary mb-0.5">{meeting.title}</div>
               <div className="text-sm text-text-tertiary">
                 {meeting.meetingAt
@@ -49,13 +52,16 @@ export function MeetingList({ projectId, meetings, onAdd, isCreating }: MeetingL
                   : new Date(meeting.createdAt).toLocaleDateString('ko-KR')}
               </div>
             </div>
-          </Link>
-        ))}
+          )
+          return readOnly
+            ? <div key={meeting.id}>{inner}</div>
+            : <Link key={meeting.id} href={`/projects/${projectId}/meetings/${meeting.id}`}>{inner}</Link>
+        })}
       </div>
 
       {/* Footer */}
       <div className="shrink-0">
-        {firstMeeting ? (
+        {!readOnly && firstMeeting ? (
           <Link href={`/projects/${projectId}/meetings/${firstMeeting.id}`}>
             <div className="flex items-center justify-end gap-1 px-5 py-3 text-base text-text-secondary cursor-pointer transition-colors hover:text-primary">
               전체보기

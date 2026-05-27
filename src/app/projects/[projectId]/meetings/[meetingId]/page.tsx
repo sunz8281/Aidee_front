@@ -119,7 +119,10 @@ export default function MeetingPage() {
   const handleDeleteMeeting = async () => {
     if (!confirm('회의를 삭제하시겠습니까?')) return
     await deleteMeeting.mutateAsync(meetingId)
-    router.push(`/projects/${projectId}`)
+    const meetings = meetingsData?.items ?? []
+    const idx = meetings.findIndex(m => m.id === meetingId)
+    const next = meetings[idx + 1] ?? meetings[idx - 1]
+    router.push(next ? `/projects/${projectId}/meetings/${next.id}` : `/projects/${projectId}`)
   }
 
   const handleAnalysisDone = () => {

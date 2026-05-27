@@ -9,11 +9,13 @@ interface MeetingSidebarProps {
   projectId: string
   meetings: MeetingSummary[]
   activeMeetingId: string
+  getMeetingHref?: (meetingId: string) => string
 }
 
-export function MeetingSidebar({ projectId, meetings, activeMeetingId }: MeetingSidebarProps) {
+export function MeetingSidebar({ projectId, meetings, activeMeetingId, getMeetingHref }: MeetingSidebarProps) {
   const router = useRouter()
   const createMeeting = useCreateMeeting(projectId)
+  const getHref = getMeetingHref ?? ((id: string) => `/projects/${projectId}/meetings/${id}`)
 
   const handleAdd = async () => {
     const res = await createMeeting.mutateAsync({})
@@ -22,17 +24,19 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
 
   return (
     <aside className="w-[349px] shrink-0 bg-[#e5e5e8] overflow-y-auto px-[27px] py-5 flex flex-col gap-5">
-      {/* Add button */}
-      <div className="flex justify-start">
-        <button
-          onClick={handleAdd}
-          disabled={createMeeting.isPending}
-          className="bg-transparent border-none cursor-pointer text-xl text-[#4a5565] leading-none p-0 disabled:opacity-50"
-          title="새 회의 추가"
-        >
-          +
-        </button>
-      </div>
+      {/* Add button — 공유 페이지에서는 숨김 */}
+      {!getMeetingHref && (
+        <div className="flex justify-start">
+          <button
+            onClick={handleAdd}
+            disabled={createMeeting.isPending}
+            className="bg-transparent border-none cursor-pointer text-xl text-[#4a5565] leading-none p-0 disabled:opacity-50"
+            title="새 회의 추가"
+          >
+            +
+          </button>
+        </div>
+      )}
 
       {/* Meeting cards */}
       {meetings.map(meeting => {
@@ -42,7 +46,7 @@ export function MeetingSidebar({ projectId, meetings, activeMeetingId }: Meeting
         return (
           <Link
             key={meeting.id}
-            href={`/projects/${projectId}/meetings/${meeting.id}`}
+            href={getHref(meeting.id)}
             className="no-underline"
           >
             <div

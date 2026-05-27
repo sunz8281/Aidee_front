@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { apiClient } from '@/lib/axios'
 import { useTokenStore } from '@/store/tokenStore'
 
-const PUBLIC_PATHS = ['/login']
+const PUBLIC_PATHS = ['/login', '/share/']
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()

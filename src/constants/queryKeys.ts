@@ -6,4 +6,5 @@ export const QUERY_KEYS = {
   schedules: (projectId: string, from: string, to: string) =>
     ['schedules', projectId, from, to] as const,
   memos: (projectId: string) => ['memos', projectId] as const,
+  sharedProject: (shareToken: string) => ['share', shareToken] as const,
 }

@@ -15,7 +15,15 @@ export interface Project {
   name: string
   meetings: MeetingSummary[]
   schedules: Schedule[]
+  shareToken: string | null
   createdAt: string
+}
+
+export interface SharedProject {
+  id: string
+  name: string
+  meetings: MeetingSummary[]
+  shareToken: string
 }
 
 export interface ProjectsResponse {

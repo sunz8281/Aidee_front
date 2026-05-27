@@ -264,3 +264,29 @@ Access token 갱신
 - meetingId 있음 → 해당 회의 기반
 - 대화 기록은 로컬 스토리지에 저장되며 매 요청마다 history로 전달
 - action type: "schedule_added" | "schedule_updated" | "schedule_deleted" | "memo_updated"
+
+---
+
+## Share
+
+### POST /projects/:projectId/share
+공유 활성화 (재호출 시 토큰 재발급)
+
+**Response 200**
+- shareToken: string — 32자 랜덤 hex
+
+### DELETE /projects/:projectId/share
+공유 해제. 기존 토큰으로 접근 시 404.
+
+**Response**: 204 No Content
+
+### GET /share/:shareToken
+인증 없이 프로젝트 + 회의 목록 조회
+
+**Response**
+- id: string
+- name: string
+- meetings: MeetingSummary[] — 회의 목록 (id, title, status, meetingAt, createdAt)
+- shareToken: string
+
+**Response 404**: 공유 해제된 토큰

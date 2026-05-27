@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { IconEdit, IconCheck, IconChat, IconPlay, IconMemo, IconCalendar, IconTrash } from '@/components/icons'
 import type { Meeting, Schedule, MeetingSummary } from '@/types'
-import { useUpdateMeeting } from '@/hooks/useMeetings'
+import { useUpdateMeeting, useUpdateSpeaker } from '@/hooks/useMeetings'
 import { useUpdateMemo } from '@/hooks/useMemos'
 import { useCreateSchedule, useUpdateSchedule, useDeleteSchedule } from '@/hooks/useSchedules'
 import { QUERY_KEYS } from '@/constants/queryKeys'
@@ -13,7 +13,7 @@ interface MeetingDetailProps {
   meeting: Meeting
   projectId: string
   meetings: MeetingSummary[]
-  liveScripts?: { startTime: number; contents: string }[]
+  liveScripts?: { startTime: number; speaker?: string; contents: string }[]
   liveSummary?: string
 }
 
@@ -206,8 +206,13 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
   const [memoSaveTimeout, setMemoSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [hoveredScheduleId, setHoveredScheduleId] = useState<string | null>(null)
   const [inlineEdit, setInlineEdit] = useState<InlineEdit | null>(null)
+  const [editingSpeakerIdx, setEditingSpeakerIdx] = useState<number | null>(null)
+  const [speakerDraft, setSpeakerDraft] = useState('')
+
+  const speakerMap = meeting.speakerNames ?? {}
 
   const updateMeeting = useUpdateMeeting(meeting.id)
+  const updateSpeaker = useUpdateSpeaker(meeting.id)
   const updateMemo = useUpdateMemo(meeting.id)
   const createSchedule = useCreateSchedule(projectId)
   const updateSchedule = useUpdateSchedule(projectId)
@@ -382,9 +387,41 @@ export function MeetingDetail({ meeting, projectId, meetings, liveScripts, liveS
                   <span className="text-md text-[#e5e5e8] min-w-[48px] shrink-0 tracking-[-0.15px]">
                     {formatSeconds(seg.startTime)}
                   </span>
-                  <p className="text-[16px] text-body leading-6 m-0 tracking-[-0.31px]">
-                    {seg.contents}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    {seg.speaker && (
+                      editingSpeakerIdx === i ? (
+                        <input
+                          autoFocus
+                          value={speakerDraft}
+                          onChange={e => setSpeakerDraft(e.target.value)}
+                          onBlur={() => {
+                            if (speakerDraft.trim()) {
+                              updateSpeaker.mutate({ label: seg.speaker!, name: speakerDraft.trim() })
+                            }
+                            setEditingSpeakerIdx(null)
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                            if (e.key === 'Escape') setEditingSpeakerIdx(null)
+                          }}
+                          className="text-sm font-medium text-primary bg-transparent border-b border-primary outline-none mb-0.5 w-32"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditingSpeakerIdx(i)
+                            setSpeakerDraft(speakerMap[seg.speaker!] ?? seg.speaker!)
+                          }}
+                          className="text-sm font-medium text-primary block mb-0.5 bg-transparent border-none cursor-pointer p-0 hover:underline"
+                        >
+                          {speakerMap[seg.speaker] ?? seg.speaker}
+                        </button>
+                      )
+                    )}
+                    <p className="text-[16px] text-body leading-6 m-0 tracking-[-0.31px]">
+                      {seg.contents}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

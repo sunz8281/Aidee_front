@@ -1,5 +1,6 @@
 import type { Schedule } from './schedule'
 
+
 export interface MeetingSummary {
   id: string
   title: string
@@ -11,6 +12,7 @@ export interface MeetingSummary {
 
 export interface ScriptSegment {
   startTime: number
+  speaker?: string
   contents: string
 }
 
@@ -22,6 +24,7 @@ export interface Meeting {
   summary: string
   memo: string
   scripts: ScriptSegment[]
+  speakerNames: Record<string, string>
   schedules: Schedule[]
   audioUrl: string
   createdAt: string

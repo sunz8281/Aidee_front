@@ -63,6 +63,18 @@ export function useUpdateMeeting(meetingId: string) {
   })
 }
 
+export function useUpdateSpeaker(meetingId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ label, name }: { label: string; name: string }) => {
+      await apiClient.patch(`/meetings/${meetingId}/speakers/${encodeURIComponent(label)}`, { name })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.meeting(meetingId) })
+    },
+  })
+}
+
 export function useDeleteMeeting(projectId: string) {
   const qc = useQueryClient()
   return useMutation({

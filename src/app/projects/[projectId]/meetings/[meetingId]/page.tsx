@@ -33,7 +33,7 @@ export default function MeetingPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [sttStarted, setSttStarted] = useState(false)
   const [processingLabel, setProcessingLabel] = useState('')
-  const [liveScripts, setLiveScripts] = useState<{ startTime: number; contents: string }[] | undefined>()
+  const [liveScripts, setLiveScripts] = useState<{ startTime: number; speaker?: string; contents: string }[] | undefined>()
   const [liveSummary, setLiveSummary] = useState<string | undefined>()
   const updateMeeting = useUpdateMeeting(meetingId)
   const deleteMeeting = useDeleteMeeting(projectId)

@@ -10,6 +10,7 @@ import { MeetingList } from '@/components/project/MeetingList'
 import { ProjectCalendar } from '@/components/project/ProjectCalendar'
 import { MemoSection } from '@/components/project/MemoSection'
 import { useProject, useUpdateProjectTitle, useDeleteProject, useEnableShare, useDisableShare } from '@/hooks/useProjects'
+import { SharePopup } from '@/components/ui/SharePopup'
 import { useCreateMeeting } from '@/hooks/useMeetings'
 import { useSchedules } from '@/hooks/useSchedules'
 import { useMemos } from '@/hooks/useMemos'
@@ -43,7 +44,7 @@ export default function ProjectPage() {
   const { data: schedulesData } = useSchedules(projectId, calFrom, calTo)
   const { data: memosData } = useMemos(projectId)
   const [shareToken, setShareToken] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [sharePopupOpen, setSharePopupOpen] = useState(false)
   const updateTitle = useUpdateProjectTitle(projectId)
   const deleteProject = useDeleteProject()
   const enableShare = useEnableShare(projectId)
@@ -70,13 +71,7 @@ export default function ProjectPage() {
   const handleDisableShare = async () => {
     await disableShare.mutateAsync()
     setShareToken(null)
-  }
-
-  const handleCopyLink = async () => {
-    if (!shareUrl) return
-    await navigator.clipboard.writeText(shareUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setSharePopupOpen(false)
   }
 
   const handleTitleEdit = () => {
@@ -165,32 +160,29 @@ export default function ProjectPage() {
               </button>
 
               <div className="ml-auto flex items-center gap-2">
-                {/* 공유 중일 때: URL 복사 + 공유 해제 */}
-                {shareToken ? (
-                  <>
-                    <button
-                      onClick={handleCopyLink}
-                      className="text-sm text-primary border border-primary rounded-md px-3 py-1 bg-transparent cursor-pointer hover:bg-primary/10 transition-colors"
-                    >
-                      {copied ? '복사됨 ✓' : '링크 복사'}
-                    </button>
-                    <button
-                      onClick={handleDisableShare}
-                      disabled={disableShare.isPending}
-                      className="text-sm text-text-tertiary border border-border rounded-md px-3 py-1 bg-transparent cursor-pointer hover:bg-surface transition-colors disabled:opacity-40"
-                    >
-                      공유 해제
-                    </button>
-                  </>
-                ) : (
+                <div className="relative">
                   <button
-                    onClick={handleEnableShare}
-                    disabled={enableShare.isPending}
-                    className="text-sm text-text-secondary border border-border rounded-md px-3 py-1 bg-transparent cursor-pointer hover:bg-surface transition-colors disabled:opacity-40"
+                    onClick={() => setSharePopupOpen(prev => !prev)}
+                    className={[
+                      'text-sm border rounded-md px-3 py-1 bg-transparent cursor-pointer transition-colors',
+                      shareToken
+                        ? 'text-primary border-primary hover:bg-primary/10'
+                        : 'text-text-secondary border-border hover:bg-surface',
+                    ].join(' ')}
                   >
-                    {enableShare.isPending ? '공유 중...' : '공유'}
+                    {shareToken ? '공유 중' : '공유'}
                   </button>
-                )}
+                  {sharePopupOpen && (
+                    <SharePopup
+                      shareUrl={shareUrl}
+                      isEnabling={enableShare.isPending}
+                      isDisabling={disableShare.isPending}
+                      onEnable={handleEnableShare}
+                      onDisable={handleDisableShare}
+                      onClose={() => setSharePopupOpen(false)}
+                    />
+                  )}
+                </div>
                 <button
                   onClick={handleDeleteProject}
                   className="bg-transparent border-none cursor-pointer text-text-tertiary p-1 rounded-sm flex items-center"

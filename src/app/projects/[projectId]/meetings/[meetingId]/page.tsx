@@ -181,7 +181,7 @@ export default function MeetingPage() {
   const meetings = meetingsData?.items ?? []
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
+    <div className="flex flex-col h-screen overflow-hidden bg-surface">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">

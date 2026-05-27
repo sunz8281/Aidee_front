@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { IconLogo } from '@/components/icons'
 import { apiClient } from '@/lib/axios'
+import { useTokenStore } from '@/store/tokenStore'
 
 interface HeaderProps {
   rightSlot?: React.ReactNode
@@ -11,11 +12,13 @@ interface HeaderProps {
 
 export function Header({ rightSlot }: HeaderProps) {
   const router = useRouter()
+  const { setAccessToken } = useTokenStore()
 
   const handleLogout = async () => {
     try {
-      await apiClient.post('/logout')
+      await apiClient.post('/auth/logout')
     } catch {}
+    setAccessToken(null)
     router.replace('/login')
   }
 

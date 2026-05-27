@@ -2,6 +2,30 @@
 
 ---
 
+## Auth
+
+### GET /oauth2/authorization/google
+Google OAuth 로그인 시작. 브라우저를 이 URL로 이동시키면 됨.
+완료 후 `http://localhost:3000?access_token=<토큰>` 으로 리다이렉트.
+refresh_token은 HttpOnly 쿠키 (Path=/auth/refresh, 30일) 로 설정됨.
+
+### POST /auth/refresh
+Access token 갱신
+
+**Request**: 없음 (refresh_token HttpOnly 쿠키 자동 첨부)
+
+**Response 200**
+- access_token: string
+
+**Response 401**: refresh token 만료 → 재로그인 필요
+
+### POST /auth/logout
+로그아웃. refresh_token 쿠키 만료 처리.
+
+**Response**: 200
+
+---
+
 ## Projects
 
 ### GET /projects
@@ -102,7 +126,8 @@
 - status: string — "pending" | "processing" | "done" | "failed"
 - summary: string — AI 요약
 - memo: string — 회의 메모
-- scripts: ScriptSegment[] — 스크립트 세그먼트 배열 (startTime: int, contents: string)
+- scripts: ScriptSegment[] — 스크립트 세그먼트 배열 (startTime: int, speaker: string, contents: string)
+- speakerNames: Record<string, string> — 화자 라벨 → 이름 매핑 (예: { "1": "박선영" })
 - schedules: Schedule[] — 회의에서 추출된 일정
 - audioUrl: string — 원본 녹음 파일 URL
 - createdAt: string
@@ -122,6 +147,16 @@
 
 ### DELETE /meetings/:meetingId
 회의 삭제
+
+**Response**: 204 No Content
+
+---
+
+### PATCH /meetings/:meetingId/speakers/:label
+화자 이름 저장 (없으면 생성, 있으면 수정)
+
+**Request body**
+- name: string (required) — 화자 이름
 
 **Response**: 204 No Content
 

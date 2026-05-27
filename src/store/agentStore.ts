@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { AgentMessage } from '@/types'
 
 interface AgentStore {
@@ -16,7 +17,7 @@ interface AgentStore {
   clearMessages: () => void
 }
 
-export const useAgentStore = create<AgentStore>((set, get) => ({
+export const useAgentStore = create<AgentStore>()(persist((set, get) => ({
   isOpen: false,
   isStreaming: false,
   messages: [],
@@ -40,4 +41,7 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
     }),
   setStreaming: (v: boolean) => set({ isStreaming: v }),
   clearMessages: () => set({ messages: [] }),
+}), {
+  name: 'agent-messages',
+  partialize: state => ({ messages: state.messages }),
 }))

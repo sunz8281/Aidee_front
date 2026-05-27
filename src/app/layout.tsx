@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { QueryProvider } from '@/lib/QueryProvider'
+import { AuthGuard } from '@/components/ui/AuthGuard'
 
 export const metadata: Metadata = {
   title: 'Aidee',
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full">
       <body className="min-h-full flex flex-col bg-surface">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider><AuthGuard>{children}</AuthGuard></QueryProvider>
       </body>
     </html>
   )

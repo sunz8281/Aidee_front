@@ -239,6 +239,7 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
         `${process.env.NEXT_PUBLIC_API_URL}/meetings/${meetingId}/audio`,
         {
           method: 'POST',
+          credentials: 'include',
           body: formData,
           onmessage(ev) {
             const data = JSON.parse(ev.data) as { message?: string; startTime?: number; text?: string }

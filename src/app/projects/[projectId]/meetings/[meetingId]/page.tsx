@@ -71,6 +71,7 @@ export default function MeetingPage() {
       `${process.env.NEXT_PUBLIC_API_URL}/meetings/${meetingId}/status/stream`,
       {
         signal: ctrl.signal,
+        credentials: 'include',
         onmessage(ev) {
           try {
             const data = JSON.parse(ev.data) as { message?: string; status?: string; startTime?: number; text?: string }

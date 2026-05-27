@@ -50,6 +50,7 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
       await fetchEventSource(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: text, history: messages }),
         signal: abortRef.current.signal,
         onmessage(ev) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { IconMic } from '@/components/icons'
 import { useQueryClient } from '@tanstack/react-query'
@@ -51,6 +51,8 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
   const [state, setState] = useState<RecordingState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
+  const [committedText, setCommittedText] = useState('')
+  const [liveText, setLiveText] = useState('')
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -58,22 +60,106 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
   const streamRef = useRef<MediaStream | null>(null)
   const liveScriptsRef = useRef<{ startTime: number; speaker?: string; contents: string }[]>([])
   const analysisBufferRef = useRef('')
+  const wsRef = useRef<WebSocket | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const processorRef = useRef<ScriptProcessorNode | null>(null)
+  const elapsedRef = useRef(0)
+  const scriptScrollRef = useRef<HTMLDivElement>(null)
 
   const qc = useQueryClient()
 
+  useEffect(() => {
+    scriptScrollRef.current?.scrollTo({ top: scriptScrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [committedText])
+
   const startTimer = () => {
-    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
+    timerRef.current = setInterval(() => setElapsed(e => {
+      const next = e + 1
+      elapsedRef.current = next
+      return next
+    }), 1000)
   }
   const stopTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current)
   }
 
+  const stopWebSocket = useCallback(() => {
+    if (processorRef.current) {
+      processorRef.current.disconnect()
+      processorRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {})
+      audioContextRef.current = null
+    }
+    if (wsRef.current) {
+      wsRef.current.onmessage = null
+      wsRef.current.onerror = null
+      if (wsRef.current.readyState === WebSocket.OPEN) wsRef.current.close()
+      wsRef.current = null
+    }
+  }, [])
+
+  const startWebSocket = useCallback(() => {
+    if (!streamRef.current) return
+
+    const wsUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/^http/, 'ws')
+    const ws = new WebSocket(`${wsUrl}/meetings/${meetingId}/stt/stream`)
+    wsRef.current = ws
+
+    try {
+      const audioCtx = new AudioContext({ sampleRate: 16000 })
+      audioContextRef.current = audioCtx
+      const source = audioCtx.createMediaStreamSource(streamRef.current)
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1)
+      processorRef.current = processor
+      source.connect(processor)
+      processor.connect(audioCtx.destination)
+
+      ws.onopen = () => {
+        processor.onaudioprocess = (e) => {
+          if (ws.readyState !== WebSocket.OPEN) return
+          const float32 = e.inputBuffer.getChannelData(0)
+          const int16 = new Int16Array(float32.length)
+          for (let i = 0; i < float32.length; i++) {
+            const s = Math.max(-1, Math.min(1, float32[i]))
+            int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
+          }
+          ws.send(int16.buffer)
+        }
+      }
+    } catch {}
+
+    ws.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data as string) as {
+          type?: 'partial' | 'final'
+          text?: string
+          startTime?: number
+          error?: string
+        }
+        if (data.error || !data.text) return
+
+        const startTime = data.startTime ?? elapsedRef.current
+
+        if (data.type === 'final') {
+          setCommittedText(prev => prev ? prev + ' ' + data.text!.trim() : data.text!.trim())
+          setLiveText('')
+        } else {
+          setLiveText(data.text!)
+        }
+      } catch {}
+    }
+    ws.onerror = () => {}
+  }, [meetingId])
+
   useEffect(() => {
     return () => {
       stopTimer()
+      stopWebSocket()
       streamRef.current?.getTracks().forEach(t => t.stop())
     }
-  }, [])
+  }, [stopWebSocket])
 
   const formatTime = (secs: number) => {
     const m = String(Math.floor(secs / 60)).padStart(2, '0')
@@ -94,7 +180,11 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
 
       setState('recording')
       setElapsed(0)
+      elapsedRef.current = 0
+      setCommittedText('')
+      setLiveText('')
       startTimer()
+      startWebSocket()
     } catch {
       alert('마이크 접근 권한이 필요합니다.')
     }
@@ -105,6 +195,7 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
       mediaRecorderRef.current.pause()
     }
     stopTimer()
+    stopWebSocket()
     setState('paused')
   }
 
@@ -113,11 +204,13 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
       mediaRecorderRef.current.resume()
     }
     startTimer()
+    startWebSocket()
     setState('recording')
   }
 
   const handleFinish = async () => {
     stopTimer()
+    stopWebSocket()
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop()
       streamRef.current?.getTracks().forEach(t => t.stop())
@@ -129,10 +222,13 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
 
   const handleDiscard = () => {
     stopTimer()
+    stopWebSocket()
     mediaRecorderRef.current?.stop()
     streamRef.current?.getTracks().forEach(t => t.stop())
     setState('idle')
     setElapsed(0)
+    setCommittedText('')
+    setLiveText('')
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,44 +311,75 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
   // Recording / Paused state
   if (state === 'recording' || state === 'paused') {
     const isRecording = state === 'recording'
+    const hasText = !!(committedText || liveText)
 
     return (
-      <div className="flex flex-col items-center justify-center bg-card border border-card-border rounded-[10px] p-12 min-h-[582px]">
-        <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-5 ${isRecording ? 'bg-recording' : 'bg-border-light'}`}>
-          <IconMic width={32} height={32} className={isRecording ? 'text-recording-icon' : ''} />
-        </div>
-        <div className="text-xl font-semibold text-text-primary mb-1.5">
-          {isRecording ? '녹음 중입니다' : '녹음이 중지되었습니다.'}
-        </div>
-        <div className="text-base text-text-tertiary mb-5">
-          {isRecording ? '페이지를 나가면 녹음이 중지됩니다.' : '녹음을 끝내시겠습니까?'}
-        </div>
-        <div className="text-[28px] font-bold text-recording-icon tabular-nums mb-5">
-          {formatTime(elapsed)}
-        </div>
-        {isRecording ? (
-          <Button variant="danger" onClick={handlePause} size="md">
-            ⏸ 일시 정지
-          </Button>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleResume} size="md" className="text-primary border-primary">
-                계속 녹음하기
-              </Button>
-              <Button variant="primary" onClick={handleFinish} size="md">
-                녹음 끝내기
-              </Button>
+      <>
+        {/* Transcript card */}
+        <div className="bg-card border border-card-border rounded-[10px] p-[25px] min-h-[200px]">
+          {hasText ? (
+            <div ref={scriptScrollRef} className="overflow-y-auto max-h-[500px]">
+              <p className="text-[16px] text-body m-0 leading-7 tracking-[-0.31px]">
+                {committedText}
+                {liveText && <span className="text-text-tertiary"> {liveText}</span>}
+              </p>
             </div>
-            <button
-              onClick={handleDiscard}
-              className="bg-transparent border-none cursor-pointer text-base text-text-tertiary"
-            >
-              녹음 삭제하기
-            </button>
+          ) : (
+            <div className="flex items-center gap-2 py-2">
+              <div className="w-2 h-2 rounded-full bg-recording-icon animate-pulse shrink-0" />
+              <span className="text-base text-text-tertiary">음성을 인식하고 있습니다...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Fixed recording bar */}
+        <div className="fixed bottom-6 left-0 right-[349px] flex justify-center z-50 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 bg-[#111111] rounded-full px-5 py-[11px] shadow-2xl">
+            {/* Mic indicator */}
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isRecording ? 'bg-recording-icon' : 'bg-[#555]'}`}>
+              <IconMic width={14} height={14} className="text-white" />
+            </div>
+
+            {/* Timer */}
+            <span className="text-white font-bold tabular-nums text-[15px] min-w-[44px]">
+              {formatTime(elapsed)}
+            </span>
+
+            <div className="w-px h-4 bg-white/20" />
+
+            {/* Controls */}
+            {isRecording ? (
+              <button
+                onClick={handlePause}
+                className="text-[14px] text-white/80 hover:text-white bg-transparent border-none cursor-pointer px-1"
+              >
+                ⏸ 일시정지
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleResume}
+                  className="text-[14px] text-white/70 hover:text-white bg-transparent border-none cursor-pointer px-1"
+                >
+                  ▶ 계속
+                </button>
+                <button
+                  onClick={handleFinish}
+                  className="text-[13px] text-white bg-primary rounded-full px-4 py-1.5 border-none cursor-pointer hover:opacity-85"
+                >
+                  끝내기
+                </button>
+                <button
+                  onClick={handleDiscard}
+                  className="text-[13px] text-white/40 hover:text-white/70 bg-transparent border-none cursor-pointer px-1"
+                >
+                  삭제
+                </button>
+              </>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </>
     )
   }
 

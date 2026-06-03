@@ -3,15 +3,22 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { apiClient } from '@/lib/axios'
-import { useTokenStore } from '@/store/tokenStore'
+import { useAuthStore } from '@/store/authStore'
 
 const PUBLIC_PATHS = ['/login', '/share/']
+
+interface AuthMeResponse {
+  id: string
+  email: string
+  name: string
+  pictureUrl: string
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p))
-  const { setAccessToken } = useTokenStore()
+  const { isLoggedIn, setLoggedIn } = useAuthStore()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -20,30 +27,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (ready) return
-
-    // OAuth 리다이렉트 후 URL에서 access_token 추출
-    const params = new URLSearchParams(window.location.search)
-    const urlToken = params.get('access_token')
-    if (urlToken) {
-      setAccessToken(urlToken)
-      params.delete('access_token')
-      const newUrl = params.toString()
-        ? `${window.location.pathname}?${params}`
-        : window.location.pathname
-      window.history.replaceState({}, '', newUrl)
+    if (isLoggedIn) {
       setReady(true)
       return
     }
 
-    // 메모리에 토큰 없으면 silent refresh 시도
-    apiClient.post<{ access_token: string }>('/auth/refresh')
+    apiClient.get<AuthMeResponse>('/auth/me')
       .then(res => {
-        setAccessToken(res.data.access_token)
+        setLoggedIn(true, res.data)
         setReady(true)
       })
-      .catch(() => router.replace('/login'))
-  }, [isPublic, ready, router, setAccessToken])
+      .catch(() => {
+        setLoggedIn(false)
+        router.replace('/login')
+      })
+  }, [isPublic, isLoggedIn, router, setLoggedIn])
 
   if (!ready) return null
   return <>{children}</>

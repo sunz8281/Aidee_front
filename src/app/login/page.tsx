@@ -1,5 +1,7 @@
 'use client'
 
+import { IconLogo } from '@/components/icons'
+
 export default function LoginPage() {
   const handleGoogleLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth2/authorization/google`
@@ -8,7 +10,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
       <div className="bg-card border border-card-border rounded-[16px] px-12 py-14 flex flex-col items-center w-[400px]">
-        <h1 className="text-[28px] font-bold text-title mb-2 tracking-[-0.5px]">Aidee</h1>
+        <IconLogo width={140} height={43} className="mb-3" />
         <p className="text-base text-text-tertiary mb-10">AI 에이전트형 프로젝트 관리 서비스</p>
 
         <button

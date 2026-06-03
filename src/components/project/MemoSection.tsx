@@ -81,7 +81,7 @@ function MemoCard({ memo, readOnly }: MemoCardProps) {
 
   if (readOnly) {
     return (
-      <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[14px] py-3 flex flex-col justify-between gap-5 min-h-[100px] overflow-hidden">
+      <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[15px] py-5 flex flex-col justify-between gap-5 min-h-[120px] overflow-hidden">
         <div className="text-base text-body leading-relaxed whitespace-pre-line break-words flex-1 min-w-0">
           {renderWithLinks(memo.memo ?? '')}
         </div>
@@ -92,7 +92,7 @@ function MemoCard({ memo, readOnly }: MemoCardProps) {
 
   if (editing) {
     return (
-      <div className="bg-card border border-primary rounded-[10px] px-[14px] py-3 flex flex-col gap-2.5">
+      <div className="bg-card border border-primary rounded-[10px] px-[15px] py-5 flex flex-col gap-2.5 min-h-[120px]">
         <div className="flex items-start justify-between gap-2">
           <textarea
             ref={textareaRef}
@@ -118,7 +118,7 @@ function MemoCard({ memo, readOnly }: MemoCardProps) {
   }
 
   return (
-    <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[14px] py-3 flex flex-col justify-between gap-5 min-h-[100px] overflow-hidden">
+    <div className="bg-memo-card border border-memo-card-border rounded-[10px] px-[15px] py-5 flex flex-col justify-between gap-5 min-h-[120px] overflow-hidden">
       <div className="flex items-start justify-between gap-2">
         <div className="text-base text-body leading-relaxed whitespace-pre-line break-words flex-1 min-w-0">
           {renderWithLinks(memo.memo ?? '')}
@@ -143,13 +143,15 @@ interface MemoSectionProps {
   readOnly?: boolean
 }
 
-export function MemoSection({ memos, readOnly }: MemoSectionProps) {
+export function MemoSection({ memos, meetings, readOnly }: MemoSectionProps) {
   if (memos.length === 0) return null
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="columns-4 gap-6">
       {memos.map((memo, i) => (
-        <MemoCard key={`${memo.meetingId}-${i}`} memo={memo} readOnly={readOnly} />
+        <div key={`${memo.meetingId}-${i}`} className="break-inside-avoid mb-6">
+          <MemoCard memo={memo} readOnly={readOnly} />
+        </div>
       ))}
     </div>
   )

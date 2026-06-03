@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { IconLogo, IconMemo } from '@/components/icons'
+import { IconMemo } from '@/components/icons'
+import { Header } from '@/components/ui/Header'
 import { MeetingList } from '@/components/project/MeetingList'
 import { ProjectCalendar } from '@/components/project/ProjectCalendar'
 import { MemoSection } from '@/components/project/MemoSection'
@@ -23,17 +24,23 @@ export default function SharedProjectPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <span className="text-md text-text-tertiary">불러오는 중...</span>
+      <div className="min-h-screen bg-surface flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-md text-text-tertiary">불러오는 중...</span>
+        </div>
       </div>
     )
   }
 
   if (isError || !project) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4">
-        <p className="text-lg font-semibold text-text-primary">공유가 해제된 프로젝트입니다.</p>
-        <p className="text-base text-text-tertiary">링크가 만료되었거나 공유가 중단되었습니다.</p>
+      <div className="min-h-screen bg-surface flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-2">
+          <p className="text-[64px] font-bold text-text-primary leading-none">404</p>
+          <p className="text-lg font-semibold text-text-primary">프로젝트를 찾을 수 없습니다.</p>
+        </div>
       </div>
     )
   }
@@ -63,16 +70,7 @@ export default function SharedProjectPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface">
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border shrink-0">
-        <IconLogo width={120} height={37} />
-        <Link
-          href="/login"
-          className="text-base text-primary font-medium no-underline hover:opacity-80"
-        >
-          Aidee 시작하기 →
-        </Link>
-      </header>
+      <Header />
 
       <main className="max-w-[1280px] mx-auto w-full px-8 pt-8 pb-20">
         {/* Title */}

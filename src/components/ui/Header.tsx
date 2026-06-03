@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { IconLogo } from '@/components/icons'
 import { apiClient } from '@/lib/axios'
-import { useTokenStore } from '@/store/tokenStore'
+import { useAuthStore } from '@/store/authStore'
 
 interface HeaderProps {
   rightSlot?: React.ReactNode
@@ -12,13 +12,13 @@ interface HeaderProps {
 
 export function Header({ rightSlot }: HeaderProps) {
   const router = useRouter()
-  const { setAccessToken } = useTokenStore()
+  const { isLoggedIn, setLoggedIn } = useAuthStore()
 
   const handleLogout = async () => {
     try {
       await apiClient.post('/auth/logout')
     } catch {}
-    setAccessToken(null)
+    setLoggedIn(false)
     router.replace('/login')
   }
 
@@ -29,12 +29,18 @@ export function Header({ rightSlot }: HeaderProps) {
       </Link>
       <div className="flex items-center gap-4">
         {rightSlot}
-        <button
-          onClick={handleLogout}
-          className="text-base text-text-tertiary bg-transparent border-none cursor-pointer hover:text-text-secondary transition-colors"
-        >
-          로그아웃
-        </button>
+        {isLoggedIn ? (
+          <button
+            onClick={handleLogout}
+            className="text-base text-text-tertiary bg-transparent border-none cursor-pointer hover:text-text-secondary transition-colors"
+          >
+            로그아웃
+          </button>
+        ) : (
+          <Link href="/login" className="text-base text-primary font-medium no-underline hover:opacity-80">
+            Aidee 시작하기 →
+          </Link>
+        )}
       </div>
     </header>
   )

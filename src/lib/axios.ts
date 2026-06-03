@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useTokenStore } from '@/store/tokenStore'
+import { useAuthStore } from '@/store/authStore'
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -7,21 +7,13 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-apiClient.interceptors.request.use((config) => {
-  const token = useTokenStore.getState().accessToken
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
 let isRefreshing = false
-let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
+let failedQueue: Array<{ resolve: () => void; reject: (err: unknown) => void }> = []
 
-function processQueue(error: unknown, token: string | null = null) {
+function processQueue(error: unknown) {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) reject(error)
-    else resolve(token!)
+    else resolve()
   })
   failedQueue = []
 }
@@ -41,34 +33,32 @@ apiClient.interceptors.response.use(
       return Promise.reject(err)
     }
 
-    if (original.url?.includes('/auth/refresh') || original.url?.includes('/auth/logout')) {
-      useTokenStore.getState().setAccessToken(null)
+    if (
+      original.url?.includes('/auth/refresh') ||
+      original.url?.includes('/auth/logout') ||
+      original.url?.includes('/auth/me')
+    ) {
+      useAuthStore.getState().setLoggedIn(false)
       redirectToLogin()
       return Promise.reject(err)
     }
 
     if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         failedQueue.push({ resolve, reject })
-      }).then((token) => {
-        original.headers.Authorization = `Bearer ${token}`
-        return apiClient(original)
-      })
+      }).then(() => apiClient(original))
     }
 
     original._retry = true
     isRefreshing = true
 
     try {
-      const res = await apiClient.post<{ access_token: string }>('/auth/refresh')
-      const newToken = res.data.access_token
-      useTokenStore.getState().setAccessToken(newToken)
-      original.headers.Authorization = `Bearer ${newToken}`
-      processQueue(null, newToken)
+      await apiClient.post('/auth/refresh')
+      processQueue(null)
       return apiClient(original)
     } catch (refreshErr) {
-      processQueue(refreshErr, null)
-      useTokenStore.getState().setAccessToken(null)
+      processQueue(refreshErr)
+      useAuthStore.getState().setLoggedIn(false)
       redirectToLogin()
       return Promise.reject(refreshErr)
     } finally {

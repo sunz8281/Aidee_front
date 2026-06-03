@@ -2,7 +2,8 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { IconLogo, IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
+import { IconChat, IconPlay, IconMemo, IconCalendar } from '@/components/icons'
+import { Header } from '@/components/ui/Header'
 import { useSharedMeeting } from '@/hooks/useMeetings'
 import { useSharedProject } from '@/hooks/useProjects'
 import { MeetingSidebar } from '@/components/meeting/MeetingSidebar'
@@ -33,10 +34,7 @@ export default function SharedMeetingPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-screen overflow-hidden bg-surface">
-        <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border shrink-0">
-          <IconLogo width={120} height={37} />
-          <Link href="/login" className="text-base text-primary font-medium no-underline hover:opacity-80">Aidee 시작하기 →</Link>
-        </header>
+        <Header />
         <div className="flex items-center justify-center flex-1">
           <span className="text-md text-text-tertiary">불러오는 중...</span>
         </div>
@@ -47,10 +45,7 @@ export default function SharedMeetingPage() {
   if (isError || !meeting) {
     return (
       <div className="flex flex-col h-screen overflow-hidden bg-surface">
-        <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border shrink-0">
-          <IconLogo width={120} height={37} />
-          <Link href="/login" className="text-base text-primary font-medium no-underline hover:opacity-80">Aidee 시작하기 →</Link>
-        </header>
+        <Header />
         <div className="flex items-center justify-center flex-1">
           <span className="text-md text-danger">회의를 찾을 수 없습니다.</span>
         </div>
@@ -67,16 +62,7 @@ export default function SharedMeetingPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-surface">
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 h-[68px] bg-card border-b border-border shrink-0">
-        <IconLogo width={120} height={37} />
-        <Link
-          href="/login"
-          className="text-base text-primary font-medium no-underline hover:opacity-80"
-        >
-          Aidee 시작하기 →
-        </Link>
-      </header>
+      <Header />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}

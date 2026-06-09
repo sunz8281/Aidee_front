@@ -47,12 +47,20 @@ function extractStreamingSummary(buffer: string): string | null {
   return result || null
 }
 
+type Segment = { startTime: number; text: string }
+
+function formatSeconds(sec: number) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0')
+  const s = String(sec % 60).padStart(2, '0')
+  return `${m}:${s}`
+}
+
 export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, onProcessingStart, onProgressUpdate, onSttStart, onScriptUpdate, onSummaryUpdate }: RecordingPanelProps) {
   const [state, setState] = useState<RecordingState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
-  const [committedText, setCommittedText] = useState('')
-  const [liveText, setLiveText] = useState('')
+  const [committedSegments, setCommittedSegments] = useState<Segment[]>([])
+  const [liveSegment, setLiveSegment] = useState<Segment | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -65,12 +73,15 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
   const processorRef = useRef<ScriptProcessorNode | null>(null)
   const elapsedRef = useRef(0)
   const scriptScrollRef = useRef<HTMLDivElement>(null)
+  const currentStartTimeRef = useRef<number | null>(null)
+  const liveTextRef = useRef('')
+  const wsStartOffsetRef = useRef(0)  // WebSocket 연결 시점의 누적 경과 시간
 
   const qc = useQueryClient()
 
   useEffect(() => {
     scriptScrollRef.current?.scrollTo({ top: scriptScrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [committedText])
+  }, [committedSegments])
 
   const startTimer = () => {
     timerRef.current = setInterval(() => setElapsed(e => {
@@ -102,6 +113,9 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
 
   const startWebSocket = useCallback(() => {
     if (!streamRef.current) return
+
+    // 이 WebSocket 세션의 startTime=0이 실제 녹음 몇 초에 해당하는지 기록
+    wsStartOffsetRef.current = elapsedRef.current
 
     const wsUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/^http/, 'ws')
     const ws = new WebSocket(`${wsUrl}/meetings/${meetingId}/stt/stream`)
@@ -140,13 +154,39 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
         }
         if (data.error || !data.text) return
 
-        const startTime = data.startTime ?? elapsedRef.current
+        const startTime = (data.startTime ?? elapsedRef.current) + wsStartOffsetRef.current
+        const trimmed = data.text.trim()
 
         if (data.type === 'final') {
-          setCommittedText(prev => prev ? prev + ' ' + data.text!.trim() : data.text!.trim())
-          setLiveText('')
+          // 현재 live 세그먼트 + final을 모두 committed로 확정
+          const liveText = liveTextRef.current.trim()
+          const liveStart = currentStartTimeRef.current
+          setCommittedSegments(prev => {
+            const next = [...prev]
+            if (liveText && liveStart !== null) next.push({ startTime: liveStart, text: liveText })
+            next.push({ startTime, text: trimmed })
+            return next
+          })
+          liveTextRef.current = ''
+          setLiveSegment(null)
+          currentStartTimeRef.current = null
         } else {
-          setLiveText(data.text!)
+          if (currentStartTimeRef.current !== null && currentStartTimeRef.current !== startTime) {
+            // startTime 바뀜 → 이전 live 세그먼트를 committed로 확정
+            const prevText = liveTextRef.current.trim()
+            const prevStart = currentStartTimeRef.current
+            if (prevText) {
+              setCommittedSegments(prev => [...prev, { startTime: prevStart, text: prevText }])
+            }
+            liveTextRef.current = trimmed
+          } else {
+            // 같은 startTime → 단어 누적 (덮어쓰기 금지)
+            liveTextRef.current = liveTextRef.current
+              ? liveTextRef.current + ' ' + trimmed
+              : trimmed
+          }
+          currentStartTimeRef.current = startTime
+          setLiveSegment({ startTime, text: liveTextRef.current })
         }
       } catch {}
     }
@@ -172,7 +212,12 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const mr = new MediaRecorder(stream)
+      const mimeType = MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+        ? 'audio/ogg;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : 'audio/webm'
+      const mr = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = mr
       chunksRef.current = []
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
@@ -181,8 +226,11 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
       setState('recording')
       setElapsed(0)
       elapsedRef.current = 0
-      setCommittedText('')
-      setLiveText('')
+      wsStartOffsetRef.current = 0
+      setCommittedSegments([])
+      setLiveSegment(null)
+      currentStartTimeRef.current = null
+      liveTextRef.current = ''
       startTimer()
       startWebSocket()
     } catch {
@@ -196,6 +244,15 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
     }
     stopTimer()
     stopWebSocket()
+    // 일시정지 시 현재 live 세그먼트를 committed로 확정
+    const live = liveTextRef.current.trim()
+    const liveStart = currentStartTimeRef.current
+    if (live && liveStart !== null) {
+      setCommittedSegments(prev => [...prev, { startTime: liveStart, text: live }])
+    }
+    liveTextRef.current = ''
+    setLiveSegment(null)
+    currentStartTimeRef.current = null
     setState('paused')
   }
 
@@ -216,7 +273,8 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
       streamRef.current?.getTracks().forEach(t => t.stop())
     }
     await new Promise<void>(resolve => setTimeout(resolve, 300))
-    const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+    const mimeType = mediaRecorderRef.current?.mimeType ?? 'audio/webm'
+    const blob = new Blob(chunksRef.current, { type: mimeType })
     await uploadAndAnalyze(blob)
   }
 
@@ -227,8 +285,10 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
     streamRef.current?.getTracks().forEach(t => t.stop())
     setState('idle')
     setElapsed(0)
-    setCommittedText('')
-    setLiveText('')
+    setCommittedSegments([])
+    setLiveSegment(null)
+    currentStartTimeRef.current = null
+    liveTextRef.current = ''
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -311,18 +371,36 @@ export function RecordingPanel({ meetingId, projectId, failed, onAnalysisDone, o
   // Recording / Paused state
   if (state === 'recording' || state === 'paused') {
     const isRecording = state === 'recording'
-    const hasText = !!(committedText || liveText)
+    const hasSegments = committedSegments.length > 0 || liveSegment !== null
 
     return (
       <>
         {/* Transcript card */}
         <div className="bg-card border border-card-border rounded-[10px] p-[25px] min-h-[200px]">
-          {hasText ? (
+          {hasSegments ? (
             <div ref={scriptScrollRef} className="overflow-y-auto max-h-[500px]">
-              <p className="text-[16px] text-body m-0 leading-7 tracking-[-0.31px]">
-                {committedText}
-                {liveText && <span className="text-text-tertiary"> {liveText}</span>}
-              </p>
+              <div className="flex flex-col gap-4">
+                {committedSegments.map((seg, i) => (
+                  <div key={i} className="flex gap-4 items-start">
+                    <span className="text-md text-text-tertiary min-w-[48px] shrink-0 tabular-nums">
+                      {formatSeconds(seg.startTime)}
+                    </span>
+                    <p className="text-[16px] text-body m-0 leading-6 tracking-[-0.31px]">
+                      {seg.text}
+                    </p>
+                  </div>
+                ))}
+                {liveSegment && (
+                  <div className="flex gap-4 items-start">
+                    <span className="text-md text-text-tertiary min-w-[48px] shrink-0 tabular-nums">
+                      {formatSeconds(liveSegment.startTime)}
+                    </span>
+                    <p className="text-[16px] text-text-tertiary m-0 leading-6 tracking-[-0.31px]">
+                      {liveSegment.text}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 py-2">

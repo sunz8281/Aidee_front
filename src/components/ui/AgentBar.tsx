@@ -18,12 +18,14 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
     close,
     inputText,
     setInputText,
-    messages,
+    messagesByProject,
     addMessage,
     appendToLastAssistant,
     isStreaming,
     setStreaming,
   } = useAgentStore()
+
+  const messages = messagesByProject[projectId] ?? []
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -32,11 +34,17 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    if (isOpen) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [isOpen])
+
   const handleSend = async () => {
     const text = inputText.trim()
     if (!text || isStreaming) return
 
-    addMessage({ role: 'user', content: text })
+    addMessage(projectId, { role: 'user', content: text })
     setInputText('')
     setStreaming(true)
 
@@ -56,7 +64,7 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
         onmessage(ev) {
           if (ev.event === 'delta') {
             const data = JSON.parse(ev.data) as { text: string }
-            appendToLastAssistant(data.text)
+            appendToLastAssistant(projectId, data.text)
           } else if (ev.event === 'action') {
             const data = JSON.parse(ev.data) as AgentActionPayload
             onAction?.(data)

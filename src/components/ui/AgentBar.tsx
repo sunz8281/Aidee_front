@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { IconX, IconSend, IconAgent } from '@/components/icons'
 import { useAgentStore } from '@/store/agentStore'
@@ -23,12 +23,26 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
     appendToLastAssistant,
     isStreaming,
     setStreaming,
+    removeLastMessage,
   } = useAgentStore()
 
   const messages = messagesByProject[projectId] ?? []
 
+  const [activeTool, setActiveTool] = useState<string | null>(null)
+
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // 리로드 후 마지막 메시지가 user이면 인풋으로 복구
+  useEffect(() => {
+    const msgs = useAgentStore.getState().messagesByProject[projectId] ?? []
+    const last = msgs[msgs.length - 1]
+    if (last?.role === 'user') {
+      removeLastMessage(projectId)
+      setInputText(last.content)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -62,22 +76,36 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
         body: JSON.stringify({ message: text, history: messages }),
         signal: abortRef.current.signal,
         onmessage(ev) {
-          if (ev.event === 'delta') {
+          if (ev.event === 'tool_call') {
+            const data = JSON.parse(ev.data) as { tool: string }
+            setActiveTool(data.tool)
+          } else if (ev.event === 'delta') {
+            setActiveTool(null)
             const data = JSON.parse(ev.data) as { text: string }
             appendToLastAssistant(projectId, data.text)
           } else if (ev.event === 'action') {
             const data = JSON.parse(ev.data) as AgentActionPayload
             onAction?.(data)
           } else if (ev.event === 'done') {
+            setActiveTool(null)
             setStreaming(false)
           }
         },
         onerror(err) {
+          setActiveTool(null)
           setStreaming(false)
           throw err
         },
       })
     } catch {
+      setActiveTool(null)
+      // 에러 시 마지막 user 메시지를 인풋으로 복구
+      const currentMsgs = useAgentStore.getState().messagesByProject[projectId] ?? []
+      const last = currentMsgs[currentMsgs.length - 1]
+      if (last?.role === 'user') {
+        removeLastMessage(projectId)
+        setInputText(last.content)
+      }
       setStreaming(false)
     }
   }
@@ -127,6 +155,28 @@ export function AgentBar({ projectId, meetingId, onAction }: AgentBarProps) {
             </div>
           )
         )}
+
+        {/* 응답 대기 중 dots 애니메이션 */}
+        {isStreaming && messages[messages.length - 1]?.role === 'user' && (
+          <div className="flex gap-[22px] items-end">
+            <div className="shrink-0">
+              <IconAgent width={52} height={52} />
+            </div>
+            <div className="bg-white px-[21px] py-[16px] rounded-br-[8px] rounded-tl-[8px] rounded-tr-[8px] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] flex items-center gap-[10px]">
+              {activeTool && (
+                <span className="text-[13px] text-text-tertiary tracking-[-0.2px]">
+                  {activeTool}
+                </span>
+              )}
+              <div className="flex gap-[6px] items-center">
+                <span className="w-[7px] h-[7px] rounded-full bg-[#bbb] animate-bounce [animation-delay:0ms]" />
+                <span className="w-[7px] h-[7px] rounded-full bg-[#bbb] animate-bounce [animation-delay:150ms]" />
+                <span className="w-[7px] h-[7px] rounded-full bg-[#bbb] animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 

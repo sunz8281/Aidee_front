@@ -15,6 +15,7 @@ interface AgentStore {
   appendToLastAssistant: (projectId: string, text: string) => void
   setStreaming: (v: boolean) => void
   clearMessages: (projectId: string) => void
+  removeLastMessage: (projectId: string) => void
 }
 
 export const useAgentStore = create<AgentStore>()(persist((set) => ({
@@ -57,6 +58,16 @@ export const useAgentStore = create<AgentStore>()(persist((set) => ({
         [projectId]: [],
       },
     })),
+  removeLastMessage: (projectId: string) =>
+    set(s => {
+      const msgs = s.messagesByProject[projectId] ?? []
+      return {
+        messagesByProject: {
+          ...s.messagesByProject,
+          [projectId]: msgs.slice(0, -1),
+        },
+      }
+    }),
 }), {
   name: 'agent-messages',
   partialize: state => ({ messagesByProject: state.messagesByProject }),
